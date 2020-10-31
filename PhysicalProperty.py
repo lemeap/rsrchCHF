@@ -135,6 +135,14 @@ class PhysicalProperty():
         else:
             xout = -(cpf * dtin) / lam + (qq * C_heated) / (C_flow * g * lam)
             return xout
+    
+    def calDTin(self,geo, xe, q, cpf, lam, lh, g, dh, tsat):
+        if geo == 'C':
+            xi = xe - 4000*q*lh / (lam * g * dh)
+            dtin = xi*lam/cpf
+            return dtin
+        else:
+            return -1
 
     def calXi(self, cpf, dtin, lam): # Inlet thermal equilibrium quality
         Xi = - (cpf * dtin) / lam

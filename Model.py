@@ -93,7 +93,7 @@ class ModelOSV(PhysicalProperty):
 
     def calKalitvianski(self, q, dh, kf, cpf, lam, pe):  # Kalitvianski (2000)
         if pe <= 36400:
-            hosv - hsat = (5 / 455) * (((q * 10 ** 6) * dh * cpf) / kf)
+            dtOSV = (5 / 455) * (((q * 10 ** 6) * dh * cpf) / kf)
             xOSV = -cpf * dtOSV / lam
             return round(dtOSV, 4), round(xOSV, 4)
         else:

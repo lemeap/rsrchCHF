@@ -281,7 +281,7 @@ def secant_method(func, x0, x1):
     # 근, 오차값, 반복 횟수를 반환
     return root, ea, iter
 
-def rk_ode45(func, yinit, x_range, h):
+def calRKOde45(func, yinit, x_range, h):
     n = int((x_range[-1] - x_range[0])/h)
 
     x, y = x_range[0], yinit

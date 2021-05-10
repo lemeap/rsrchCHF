@@ -1,0 +1,37 @@
+/*
+김경동 선배까지의 CHF 데이터 (10539개)
+1) Saha and Zuber (Converged)
+  No. of data: 9762
+  MPE(Mean Percentage Error): -0.0652
+  RMSPE(Root Mean Squared Percentage Error): 3.0101
+
+2) New Correlation (Converged)
+  No. of data: 6877
+  MPE(Mean Percentage Error): 0.172
+  RMSPE(Root Mean Squared Percentage Error): 2.9749
+*/  
+
+-- New correlation MPE, RMSPE
+select count(*), cast(avg(q_err)*100 as numeric(8,4)) as mse
+	, cast(sqrt(avg(power(q_err,2)))*100 as numeric(8,4)) as rmse
+from val_res_js_tb T1
+inner join val_res_js_err_tb T2
+on T1.index = T2.index
+and idx_err LIKE 'Converged'
+;
+
+-- Saha and Zuber MPE, RMSPE
+select count(*), cast(avg(q_err)*100 as numeric(8,4)) as mse
+	, cast(sqrt(avg(power(q_err,2)))*100 as numeric(8,4)) as rmse
+from val_res_sz_tb T1
+inner join val_res_sz_err_tb T2
+on T1.index = T2.index
+and idx_err LIKE 'Converged'
+;
+
+-- New correlation이 튀는 이유 찾기
+select T1.*
+from val_res_js_tb T1
+inner join val_res_js_err_tb T2
+on T1.index = T2.index
+and T2.idx_err = 'Diverged';

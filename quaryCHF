@@ -11,6 +11,33 @@
   RMSPE(Root Mean Squared Percentage Error): 2.9749
 */  
 
+CREATE TABLE rawdata_chf_park_tb
+(
+    run_id character varying(10)
+    tb_no character varying(10),
+    year_no integer,
+    source character varying(100)
+    refri character varying(20) 
+    geo character varying(10)
+    flow character varying(10)
+    dir character varying(10)
+    matio character varying(100)
+    matoi character varying(100)
+    hsur character varying(10)
+    doi numeric(10,6),
+    dio numeric(10,6),
+    dh numeric(10,6),
+    gap numeric(10,6),
+    lh numeric(10,6),
+    p numeric(10,6),
+    g numeric(15,6),
+    q numeric(10,6),
+    dtin numeric(10,6),
+    xe numeric(10,6)
+)
+
+
+
 -- New correlation MPE, RMSPE
 select count(*), cast(avg(q_err)*100 as numeric(8,4)) as mse
 	, cast(sqrt(avg(power(q_err,2)))*100 as numeric(8,4)) as rmse
@@ -35,3 +62,16 @@ from val_res_js_tb T1
 inner join val_res_js_err_tb T2
 on T1.index = T2.index
 and T2.idx_err = 'Diverged';
+
+-- ei, ei2 있을 경우 계산하는 방법
+select count(*), round(avg(cast(T1.ei as numeric(8,4)))*100,4) as mse
+	, round(sqrt(avg(cast(T1.ei2 as numeric(8,4))))*100,4) as rmse
+from park_sz_chf_tb T1
+inner join jeong_sz_chf_tb T2
+on T1.index =T2.index;
+
+
+select count(*), round(avg(cast(ei as numeric(8,4)))*100,4) as mse
+	, round(sqrt(avg(cast(ei2 as numeric(8,4))))*100,4) as rmse
+from jeong_sz_chf_tb;
+

@@ -1,0 +1,141 @@
+---
+title: "Rscripts"
+author: "Lemeap"
+date: '2021 2 06 '
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+#R버전 확인 작업
+```{r}
+
+#install.packages("installr")
+library(installr)
+install.R()
+version
+```
+
+#기본적인 패키지 모듈 설치
+```{r setup, include=FALSE}
+#0. Set operating environment of this code
+install.packages(c('openxlsx','nlstools','Metrics','scales','digitize','tidyverse','DBI','odbc','RPostgreSQL', 'extrafont'))
+#1. Library source files
+library(openxlsx)
+library(nlstools)
+library(tidyverse)
+library(Metrics)
+library(digitize)
+library(ggplot2)
+library(DBI)
+library(odbc)
+library(RPostgreSQL)
+library(extrafont)
+
+# Default fonts setup
+windowsFonts(
+  Arial   = windowsFont("Arial"),
+  Calibri = windowsFont("Calibri"),
+  Cambria = windowsFont("Cambria"),
+  Times = windowsFont("Times New Roman")
+  
+)
+font_import()
+#loadfonts(device="win")
+fonts()
+```
+
+```{r}
+# PostgreSQL set
+require("RPostgreSQL")
+con = dbConnect(dbDriver("PostgreSQL"), dbname = "Research", host="localhost", port=5432, user="postgres", password="1234")
+dbListTables(con)
+
+# df
+df = dbGetQuery(con, "select *
+from test_err_tb T1;
+SELECT T1.*, T2.pe, T2.re, T2.we, T2.bd, T2.bo, T2.fr, T2.ca, T2.pr, T2.p, T2.pcrit, T2.rhof, T2.rhov, T2.muf, T2.muv, T2.kf, T2.kv, T2.sigma, T2.dtin, T2.lam,T2.cpf, T2.cpv, T2.tsat, T2.v
+                FROM test_val_js_tb T1
+                INNER JOIN text_res_tb T2
+                ON T1.index = cast(T2.run_id as bigint)
+                AND T1.xt_cal between 0 and 1
+                AND T2.st_cal < 1;")
+```
+
+```{r}
+# 회귀분석으로 새로운 모델 만들기*((muf-muv)/(muf+muv))^e*(lh/dh)^b(cpf-cpv)/(cpf+cpv))^c
+F1=formula(q*ca ~ (xt_cal)*(sigma/v^2*rhof*dh)^0.5) #*((kf-kv)/(kf+kv))^c *((rhof-rhov)/(rhof+rhov))^d*((muf-muv)/(muf+muv))^e)
+F2=formula(st ~ 0.0965*pe^-0.225*(rhof/(rhof-rhov))^1.5)
+Corl1=nls(F1, start = list(a=0.1), control = list(maxiter = 50000),data = df)
+Corl2=nls(F2, start = list(b=0.1), control = list(maxiter = 50000), data = df)
+summary(Corl1)
+summary(Corl2)
+Corl1
+
+pairs(bo ~ re + we + bo + xt_cal + pr + bd + fr , data= df)
+
+```
+
+```{r}
+#g^0.65*(xt_cal-xi)^0.62*(lh/dh)^-0.77*(p/pcrit)^-0.148
+#*xt_cal^-1.2*(lh/dh)^0.31*(rhof-rhov)/(rhof+rhov)
+#*(lh/dh)^-0.33*(muf/muv)^-1*(kf/kv)^-0.25*(rhof/rhov)^0.35
+#(sigma/(v^2*rhof*dh))^0.5
+ggplot(data=df, aes(x=g*(dh/lh)*exp(xt_cal), y=q)) +
+  geom_point(aes(colour = pr)) + scale_colour_gradient(low = "blue", high = "red") +
+  stat_smooth(method="nls", formula = y ~ x ) +
+  #scale_shape_manual(values=rep(c(1:18,65:90))) +
+  #scale_colour_manual(values = c("Red","Black","Blue")) +
+  labs(y=expression(paste(italic("Critical Heat Flux, qCHF [MW/m3] "))), x=expression(paste(italic("GXt")))) +
+  theme_bw(base_family = "Times") +
+  theme(text=element_text(size=9.5)) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor=element_blank(),
+        #legend.justification =c(0,0.95), 
+        #legend.position = c(0.05,0.95),
+        #legend.background=element_rect(fill="white", size=0.5, linetype="solid", colour = "black"),
+        #legend.title=element_blank(),
+        #legend.key.height=unit(0.05, unit="cm"),
+        #legend.key.width=unit(0.15, unit="cm"),
+        #legend.direction = "horizontal", 
+        #legend.key.size = unit(0.5,"cm"),
+        #legend.text=element_text(size=6), 
+        axis.title.x = element_text(vjust=2),
+        axis.title.y=element_text(vjust=-1.5)) +
+  scale_x_continuous(
+   trans = "log10") +
+   #limits = c(0.001, 1000000)) +
+   #breaks = c(0.005, 0.01)) +
+  scale_y_continuous(
+   #limits = c(0.0001, 150),
+   #breaks = c(0.0025, 0.001, 0.01, 0.02, 0.03),
+   trans = "log10") +
+  annotation_logticks(outside =FALSE, short = unit(0.1, "cm"), mid = unit(0.2, "cm"), base = 10, scaled = TRUE)
+  #ggsave("Newcorrelation_over_We200.png", width = 10, height= 9, units = "cm", dpi=1200)
+  
+ggplot(data=df, aes(x=q_cal_park, y=q)) + geom_point()
+
+```
+
+
+
+실험 조건 범위를 그리기 위한 그래프
+```{r}
+reg_db$pntile=ntile(reg_db$p, 10)
+summary(reg_db) 
+hist(reg_db$p, breaks=20)
+
+# pressure histogram
+ggplot(data=df,aes(x=p)) +
+  geom_histogram(binwidth=18, fill = "white", colour = "black") +
+  theme_bw(base_family = "Times") +
+  theme(text=element_text(size=9.5)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor=element_blank(), legend.justification =c(0,0.05), legend.position = c(0.45,0.75),
+        legend.background=element_rect(fill="white", size=0.5, linetype="solid", colour = "black"), legend.title=element_blank(),
+        legend.key.height=unit(0.25, unit="cm"), legend.key.width=unit(0.15, unit="cm"), legend.direction = "horizontal", 
+        legend.key.size = unit(0.5,"cm"), legend.text=element_text(size=6), axis.title.x = element_text(vjust=2)) +
+  coord_trans(ylim = c(0,2500)) +
+  labs(y=expression(paste(italic("Number of data "))), x=expression(paste(italic("Pressure  "), italic(" [bar]"))))
+  #ggsave("Fig. 99. no. of data vs. pressure.png", height = 6.5, width = 8, unit = "cm", dpi = 1200)
+```
+

@@ -316,3 +316,6 @@ def calRKOde45(func, yinit, x_range, h):
         ysol[i] = y
     ysol = np.array(ysol)
     return xsol, ysol
+
+def findIntersection(fun1, fun2, x0): # 연립방정식의 해 찾기
+    return fsolve(lambda x: fun1(x) - fun2(x), x0)

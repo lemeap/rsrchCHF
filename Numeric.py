@@ -76,10 +76,10 @@ def bisect(func, xl, xu):
     # 무한 반복
     while True:
         # 우선 현재 중심값을 xrold라는 변수에 저장해둠
-        xrold = xr
+        xrold = round(xr,6)
 
         # 중심값을 현재의 최고, 최저값을 더한 후 2로 나눈 값(중앙값)으로 설정함
-        xr = np.float((xl + xu) / 2)
+        xr = round(np.float((xl + xu) / 2),6)
 
         # 한 바퀴 더 돌았음
         iter = iter + 1
@@ -91,16 +91,16 @@ def bisect(func, xl, xu):
             ea = np.float(np.abs((np.float(xr) - np.float(xrold)) / np.float(xr)) * 100)
 
         # f(최저값)과 x(최고값)을 곱함
-        test = func(xl) * func(xr)
+        test = round(func(xl) * func(xr),6)
 
         # 만약 곱한 값이 양수라면
         if test > 0:
             # 최저값을 현재 중심값으로 설정함
-            xl = xr
+            xl = round(xr,6)
         # 아니고 만약 음수라면
         elif test < 0:
             # 최고값을 현재 중심값으로 설정함
-            xu = xr
+            xu = round(xr,6)
         # 만약 양수도, 음수도 아닌 0이라면
         else:
             # 오차 없음, 정확히 찾음
@@ -114,13 +114,13 @@ def bisect(func, xl, xu):
             break
 
     # 구한 중심값을 근으로 침
-    root = xr
+    root = round(xr,6)
 
     # f(x)에 구한 근 넣어서 계산
-    fx = func(xr)
+    fx = round(func(xr),6)
 
     # 근, f(근) 값, 계산된 오차값, 반복값
-    return root, fx, ea, iter
+    return round(root,6), round(fx,6), round(ea,6), iter
 
 def false_position(func, xl, xu):
     """

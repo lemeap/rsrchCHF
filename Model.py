@@ -2,6 +2,7 @@
 import time
 from CoolProp.CoolProp import PropsSI
 from PhysicalProperty import *
+from Numeric import *
 
 
 class ModelOSV(PhysicalProperty):
@@ -1112,4 +1113,178 @@ class ModelOSV(PhysicalProperty):
         return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
     # The equations for CHF algorithm (Local hypothesis)
+    def calCHFPark(self, rdcp, dh, g, xt_cal):
+        """
+        Park (2004) CHF correlation
+        """
+        # CHF 계산 (Park)
+        alpha_park = round(0.71+4.6*rdcp-5.33*rdcp**2,6)
+        gamma_park = round(0.1-0.58*rdcp**2-1.54*rdcp**3,6)
+        k1_park = round(-0.343+0.22626*np.log(g)-0.01409*np.log(g)**2,6)
+        k2_park = 0.545
+        k3_park = round(2.6404-6.5*k1_park+6.1565*k1_park**2,6)
+        fxt_park = round(np.sqrt(xt_cal*(1+xt_cal**2)**3),6)
+        q_cal_park = round(alpha_park/(dh ** k1_park) * np.exp (-gamma_park*((g**0.55) * np.sqrt(xt_cal * (1+(xt_cal**2))**3)**k2_park)),6) # Park
+        return q_cal_park
 
+    def calIntgrXt(self, i, rdcp, dh, lh, g, xi, xout, xt_cal_old, st_cal, lam, stepsize = 0.0001, tolerance = 0.0001, flag_q = 1):
+        # Lambda 함수 설정
+        func = lambda x: xosv_cal * np.log((xeq -x)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
+        funky = lambda x: xosv_cal*np.log((xeq-x)/xb)
+        line = lambda x: -np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
+
+        if flag_q == 0: # Measured qCHF를 기반으로 Xt 계산하는 알고리즘
+            # q_cal 계산
+            q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)
+
+            # Xosv, Xeq, Xb 계산
+            xosv_cal = round(-(q_cal * 10**6)/ (st_cal * g * lam),6) # XOSV 계산값 (based on qCHF)
+            xb = round(max(xi, xosv_cal), 6)
+            xeq = round(xi+ (4*q_cal*10**6*lh)/(lam*g*dh),6)
+
+            # Xt 계산하기
+            try:
+                Fxt = xosv_cal * np.log(xeq-xt_cal_old/xb) + np.log((1-xeq+xosv_cal-xosv_cal*xt_cal_old)/(1-xb+xosv_cal)) # Fxt = 0 수렴여부 판단을 위한 척도 계산
+            finally:        
+                # xt=0에서 Fxt가 존재하는가? 
+                if np.isinf(Fxt) == 1 or np.isnan(Fxt) == 1:
+                    print('f(Xt) is inf or nan')
+                    
+                else:
+                    if xeq > 0:
+                        pass # 수렴 안되는 조건
+                    else:
+                        print('f(Xt) : {}'.format(round(Fxt,6)))
+                        result = findIntersection(funky, line, 0) # fsolve로 해찾기
+                        converged = 'Analytical, Converged' # xt가 0인 지점에서 가장 가까은 해가 Xt_cal 이므로 수렴
+                        return round(result,6), converged, round(Fxt,6)
+                        
+            # Fxt가 발산할 경우 계산하는 알고리즘 추가
+        else:        
+            # Flag 변수 설정
+            cnt = 0 # Xt 계산 알고리즘 반복회수 계산
+            cnt_nan = 0 # Xt_cal_new return 시도 실패 회수 계산
+            
+            while 1: # Xt_old와 Xt_new의 수렴여부 판단
+                print("수렴 여부 판단 cnt_nan = {}, cnt = {}".format(cnt_nan, cnt))
+                if cnt_nan == 1000:
+                    converged = 'Diverged'
+                    #print("{}번째 데이터는 {}되었습니다.".format(i, converged))
+                    return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4)
+                else:
+                    while 1: # Xt 찾기
+                        # q_cal 계산
+                        q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)
+
+                        # Xosv, Xeq, Xb 계산
+                        xosv_cal = round(-(q_cal * 10**6)/ (st_cal * g * lam),6) # XOSV 계산값 (based on qCHF)
+                        xb = round(max(xi, xosv_cal), 6)
+                        xeq = round(xi+ (4*q_cal*10**6*lh)/(lam*g*dh),6)
+
+                        # Xt 계산하기
+                        try:
+                            cnt += 1
+                            xt_cal_init = xt_cal_old
+                            while 1:
+                                try: 
+                                    Fxt_old = xosv_cal * np.log((xeq - xt_cal_old)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*xt_cal_old)/(1-xb+xosv_cal)) 
+                                finally:
+                                    if np.isinf(Fxt_old) == 1 or np.isnan(Fxt_old) == 1: # 만약 Fxt가 없으면 xt_cal_old를 stepsize만큼 이동
+                                        if xt_cal_old < 0 or xeq > 1: # Xt_cal_old, xeq의 값이 없으면 xout = xt와 같다.
+                                            xt_cal_old = xout
+                                            Fxt = 1
+                                            Fxt_old = 1
+                                            break
+                                        
+                                        if xi >0:
+                                            xt_cal_old -= stepsize
+                                            continue
+                                        else:
+                                            xt_cal_old += stepsize
+                                            continue
+                                    else:
+                                        if Fxt_old < 0:
+                                            Fxt = 0
+                                            xt_cal_old = xeq
+                                            tmp = -1
+                                            break
+                                        else:
+                                            Fxt = Fxt_old
+                                            tmp = 1
+                                            break  
+                        finally:                            
+                            # 종료조건 1 : 반복횟수 100회 이상
+                            if cnt > 5000:
+                                xt_cal = xt_cal_old
+                                Fxt = Fxt_old
+                                converged = 'Diverged'
+                                break
+
+                            # 종료조건 2 : xi, Fxt 값에 따른 수렴 여부 파악
+                            if xi > 0: # inlet quality > 0이면 그래프 개형은 왼쪽으로 발산
+                                if np.abs(Fxt/Fxt_old-1) < tolerance*10:
+                                    Fxt = Fxt_old
+                                    xt_cal = xt_cal_old
+                                    converged = 'Numerical, Converged'
+                                    break
+                                else:
+                                    if Fxt_old < 0 :
+                                        if tmp == -1:
+                                            Fxt = 0
+                                            xt_cal = xt_cal_old
+                                            converged = 'Numerical, Converged'
+                                            break
+                                        else:
+                                            # Bisection Method로 값 찾기
+                                            xt_cal = round(bisect(func, xt_cal_old+stepsize, xt_cal_old)[0],6)
+                                            Fxt = 0
+                                            converged = 'Bisection, Converged'
+                                            break
+                                    else:
+                                        cnt += 1 # 계산회수 1회 추가
+                                        Fxt = Fxt_old
+                                        xt_cal_old -= stepsize
+                                        continue
+                            elif xi < 0: # inlet quality < 0이면 그래프 개형은 오른쪽으로 발산
+                                if np.abs(Fxt/Fxt_old-1) < tolerance*10:
+                                    Fxt = Fxt_old
+                                    xt_cal = xt_cal_old
+                                    converged = 'Numerical, Converged'
+                                    break
+                                else:
+                                    if Fxt_old < 0 :
+                                        if tmp == -1:
+                                            Fxt = 0
+                                            xt_cal = xt_cal_old
+                                            converged = 'Numerical, Converged'
+                                            break
+                                        else:
+                                            # Bisection Method로 값 찾기
+                                            xt_cal = round(bisect(func, xt_cal_old+stepsize, xt_cal_old)[0],6)
+                                            Fxt = 0
+                                            converged = 'Bisection, Converged'
+                                            break
+                                    else:
+                                        cnt += 1 # 계산회수 1회 추가
+                                        Fxt = Fxt_old
+                                        xt_cal_old += stepsize
+                                        continue
+                            else:
+                                Fxt = 0
+                                xt_cal = xout
+                                converged = 'Xi==0, Converged'
+                                break
+                # Xt_old Xt_new 계산
+                
+                xt_cal_new = 0.99 * xt_cal_init + 0.01 * xt_cal
+                
+                if np.abs(xt_cal_new - xt_cal_init) < tolerance:
+                    #print("{}번째 데이터는 {}되었습니다.".format(i, converged))
+                    return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4)
+                else:
+                    xt_cal_old = xt_cal_new
+                    cnt_nan += 1
+                    del Fxt_old
+                    continue
+
+    

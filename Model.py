@@ -1119,12 +1119,12 @@ class ModelOSV(PhysicalProperty):
         """
         # CHF 계산 (Park)
         alpha_park = round(0.71+4.6*rdcp-5.33*rdcp**2,6)
-        gamma_park = round(0.1-0.58*rdcp+1.9851*rdcp**2-1.54*rdcp**3,6)
+        gamma_park = round(0.1-0.58*rdcp+1.985*rdcp**2-1.54*rdcp**3,6)
         k1_park = round(-0.343+0.22626*np.log(g)-0.01409*np.log(g)**2,6)
         k2_park = 0.545
         k3_park = round(2.6404-6.5*k1_park+6.1565*k1_park**2,6)
-        fxt_park = round(np.sqrt(xt_cal*(1+xt_cal**2)**3),6)
-        q_cal_park = round(alpha_park/(dh ** k1_park) * np.exp(-gamma_park*((g**k2_park)*fxt_park)**k3_park),6) # Park
+        fxt_park = round(np.sqrt(xt_cal*((1+xt_cal**2)**3)),6)
+        q_cal_park = round((alpha_park/(dh ** k1_park)) * np.exp(-gamma_park*((g**k2_park)*fxt_park)**k3_park),6) # Park
         return q_cal_park
 
     def calCHFDeng(self, rdcp, dh, g, xt_cal):
@@ -1140,13 +1140,13 @@ class ModelOSV(PhysicalProperty):
 
     
 
-    def calIntgrXt(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 'Deng', stepsize = 0.0001, tolerance = 0.0001, flag_q = 1):
+    def calIntgrXt(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 0, stepsize = 0.0001, tolerance = 0.0001, flag_q = 1):
         # Lambda 함수 설정
         func = lambda x: xosv_cal * np.log((xeq -x)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
         funky = lambda x: xosv_cal*np.log((xeq-x)/xb)
         line = lambda x: -np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
 
-        if flag_q == 0: # Measured qCHF를 기반으로 Xt 계산하는 알고리즘
+        if flag_q == 2: # Measured qCHF를 기반으로 Xt 계산하는 알고리즘
             # 앞서 계산한 OSV 상관식으로 계산한 st이 삽입된 xosv_cal 계산
             xosv_cal = round(-(q * 10**6)/ (st_cal * g * lam),6) # XOSV 계산값 (based on qCHF)
             if xi == 0: # xi가 0으로 들어올 경우, 
@@ -1349,7 +1349,7 @@ class ModelOSV(PhysicalProperty):
                         return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
                     
             cnt_nan = 0 # nan값을 삭제하고 초기화
-        elif flag_q == 1:        
+        elif flag_q == 3:        
             # Flag 변수 설정
             cnt = 0 # Xt 계산 알고리즘 반복회수 계산
             cnt_nan = 0 # Xt_cal_new return 시도 실패 회수 계산
@@ -1493,10 +1493,10 @@ class ModelOSV(PhysicalProperty):
             while 1: # Xt_old와 Xt_new의 수렴여부 판단
                 #print("수렴 여부 판단 cnt_nan = {}, cnt = {}".format(cnt_nan, cnt))            
                 # Xt_cal_old 계산
-                xt_cal_old = 0.0001
+                #xt_cal_old = 0.0001
 
                 while 1: # Xt 찾기
-                    if cnt_nan == 1e4: # 종료 조건
+                    if cnt_nan == 1e5: # 종료 조건
                         xt_cal_new = xt_cal_new
                         Fxt = 0
                         converged = 'Diverged'
@@ -1515,29 +1515,32 @@ class ModelOSV(PhysicalProperty):
                     
                     # Xosv, Xeq, Xb 계산
                     xeq = round(xi+ (4*q_cal*10**6*lh)/(lam*g*dh),6)
-
+                    xosv_cal = round(-(q_cal/(st_cal*g*lam))*(10**6),6) # XOSV 계산값 (based on qCHF)
+                    xb = round(max(xi, xosv_cal), 6)
+                    """
                     if xeq < 0: # xeq < 0이면 결국 q는 nan이 발생. xeq <0일 경우 강제로 1e-4로 결정
                         xeq = 1e-6
                     else:
                         pass
-
+                    
                     xosv_cal = round(-(q_cal/(st_cal*g*lam))*(10**6),6) # XOSV 계산값 (based on qCHF)
                     if xi == 0: # xi가 0으로 들어올 경우, 
                         xb = round(xosv_cal,6)
                     else:
                         xb = round(max(xi, xosv_cal), 6)
-                    
+                    """ # Park 모델을 사용하기 위한 임시
+
                     # Gauss-Jeidel calculation 계산하기
                     try:
                         cnt += 1
-                        C1 = 1 - xeq + xosv_cal - xosv_cal * xt_cal_old
+                        C1 = round(1 - xeq + xosv_cal - xosv_cal * xt_cal_old,6)
                         C2 = 1 - xb + xosv_cal
 
-                        if C1/C2 >0:
-                            C3 = -np.log(C1/C2)
+                        if C1/C2 > 0:
+                            C3_tmp = round(C1/C2,6)
                         else:
-                            C3 = -np.log(10)
-                        
+                            C3_tmp = 1e-20
+                        C3 = -np.log(C3_tmp)/xosv_cal
                         C4 = np.exp(C3)
                         """
                         if cnt_nan == 0:
@@ -1553,29 +1556,30 @@ class ModelOSV(PhysicalProperty):
                                 pass
                         """
                         # Xt_cal_new 계산
-                        xt_cal = xeq - xb*C4
-                        xt_cal_new = 0.99*xt_cal_old + 0.01 * xt_cal
+                        # xt_cal_new = 0.99 * xt_cal_init + 0.01 * xt_cal
+
                         #print(q_cal, " + ", C4)
                     finally:                            
-                        #if np.abs(xt_cal_new-xt_cal_old) < 0.001:
-                        if np.abs(xt_cal/xt_cal_old - 1) < 0.001:
+                        # Xt_cal_new 계산
+                        xt_cal = xeq - xb*C4
+                        xt_cal_new = 0.99*xt_cal_old + 0.01 * xt_cal
+                        
+                        if np.abs(xt_cal_new/xt_cal_old - 1) < tolerance:
                             xt_cal_new = xt_cal_new
                             Fxt = 0
                             converged = 'Numerical, Converged'
                             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
                             return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
                         else:
-
+                            """
                             if xt_cal > 0:
                                 xt_cal_old = xt_cal_new
                                 C4_old = C4
                             else:
                                 xt_cal_old = 0.9999*xt_cal_old + 0.0001 * xt_cal
                                 C4_old  = C4
-                                
+                            """ 
+                            xt_cal_old = xt_cal_new # Park 모델을 사용하기 위한 임시
                             cnt_nan += 1
                             #print(i, " + ", cnt_nan)
                             continue                          
-
-
-    

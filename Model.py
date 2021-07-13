@@ -1517,7 +1517,8 @@ class ModelOSV(PhysicalProperty):
                     xeq = round(xi+ (4*q_cal*10**6*lh)/(lam*g*dh),6)
                     xosv_cal = round(-(q_cal/(st_cal*g*lam))*(10**6),6) # XOSV 계산값 (based on qCHF)
                     xb = round(max(xi, xosv_cal), 6)
-                    """
+                    
+                    # New 제약조건
                     if xeq < 0: # xeq < 0이면 결국 q는 nan이 발생. xeq <0일 경우 강제로 1e-4로 결정
                         xeq = 1e-6
                     else:
@@ -1528,7 +1529,7 @@ class ModelOSV(PhysicalProperty):
                         xb = round(xosv_cal,6)
                     else:
                         xb = round(max(xi, xosv_cal), 6)
-                    """ # Park 모델을 사용하기 위한 임시
+                     # Park 모델을 사용하기 위한 임시
 
                     # Gauss-Jeidel calculation 계산하기
                     try:
@@ -1542,19 +1543,7 @@ class ModelOSV(PhysicalProperty):
                             C3_tmp = 1e-20
                         C3 = -np.log(C3_tmp)/xosv_cal
                         C4 = np.exp(C3)
-                        """
-                        if cnt_nan == 0:
-                            C4_old = 1
-                            if C4/C4_old < 0:
-                                C4 = 0.99*C4 + 0.01*C4_old
-                            else:
-                                pass
-                        else:
-                            if C4/C4_old < 0:
-                                C4 = 0.99*C4 + 0.01*C4_old
-                            else:
-                                pass
-                        """
+                                                
                         # Xt_cal_new 계산
                         # xt_cal_new = 0.99 * xt_cal_init + 0.01 * xt_cal
 
@@ -1570,16 +1559,19 @@ class ModelOSV(PhysicalProperty):
                             converged = 'Numerical, Converged'
                             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
                             return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
-                        else:
-                            """
+                        else:                            
                             if xt_cal > 0:
                                 xt_cal_old = xt_cal_new
                                 C4_old = C4
+                                cnt_nan += 1
+                                continue
                             else:
                                 xt_cal_old = 0.9999*xt_cal_old + 0.0001 * xt_cal
+                                cnt_nan +=1
                                 C4_old  = C4
-                            """ 
+                                continue
+                            """
                             xt_cal_old = xt_cal_new # Park 모델을 사용하기 위한 임시
                             cnt_nan += 1
                             #print(i, " + ", cnt_nan)
-                            continue                          
+                            continue                         """ 

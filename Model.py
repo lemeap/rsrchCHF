@@ -1132,12 +1132,12 @@ class ModelOSV(PhysicalProperty):
         """
         Deng (1997) CHF correlation
         """
-        # CHF 계산 (Park)
+        # CHF 계산 (Deng)
         alpha = round(1.669-6.544*(rdcp-0.448)**2,6)
         gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),6)
-        fxt = round(np.sqrt(g*xt_cal*((1+xt_cal**2)**3)),6)
-        q_cal = round((alpha/np.sqrt(dh)) * np.exp(-gamma*fxt),6) # Park
-        return alpha, gamma, fxt, q_cal
+        zxt = round(np.sqrt(g*xt_cal*((1+xt_cal**2)**3)),6)
+        q_cal = round((alpha/np.sqrt(dh)) * np.exp(-gamma*zxt),6) # Park
+        return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
         boolean=1
@@ -1149,7 +1149,7 @@ class ModelOSV(PhysicalProperty):
         else:
             q_cal = q
         Xosv=lambda Xt: -q_cal(Xt)*10**6 / st_cal / g / lam
-        Xe=lambda Xt: Xi + 4*q_cal(Xt)*lh*10**6 / (lam*g*dh)  
+        Xe=lambda Xt: Xi + 4*q_cal(Xt)*10**6*lh / (lam*g*dh)  
         Xb=lambda Xt: max((Xosv(Xt),Xi))
         f=lambda Xt: Xosv(Xt)*np.log((Xe(Xt)-Xt)/Xb(Xt))+np.log((1-Xe(Xt)+Xosv(Xt)-Xosv(Xt)*Xt)/(1-Xb(Xt)+Xosv(Xt)))
         
@@ -1157,16 +1157,27 @@ class ModelOSV(PhysicalProperty):
         Another_side=0
 
         if Xi<0:
-            Xt=0.5
-            old_Xt=1e-10
+            Xt = 0.1
+            if Xe_ass < 0:
+                old_Xt = 1e-4
+            else:
+                old_Xt = Xe_ass
             
             Q=(Xosv(old_Xt)-Xosv(Xt))/(Xe(old_Xt)-Xe(Xt))
             Xe_over=(Q*Xe(Xt)-Xosv(Xt))/(Q-1)
             cnt_crt = 0
+
             while 1:
-                critical=max([(1-Xe(Xt)+Xosv(Xt))/Xosv(Xt), Xe(Xt), 0])   # 왼쪽 경계값을 결정  
+                # 함수 갱신텀
+                fxt = f(Xt)
+                xosv_tmp = Xosv(Xt)
+                xe_tmp = Xe(Xt)
+
+                #계산
+                right_side=max([(1-xe_tmp+xosv_tmp)/xosv_tmp, xe_tmp, 0])   # 왼쪽 경계값을 결정  
                 delta=abs(Xt-old_Xt)
-                if critical > Xt:
+                
+                if right_side > Xt:
                     if boolean==1:
                         old_Xt=Xt
                         Xt=Xt+delta
@@ -1174,19 +1185,29 @@ class ModelOSV(PhysicalProperty):
                         old_Xt=Xt
                         Xt=Xt+delta/2
                 else:
-                    if boolean==1 and (f(Xt)>f(Xt+stepsize)) and f(Xt) > 0:
+                    if boolean==1 and (fxt>f(Xt+stepsize)) and fxt > 0:
                         old_Xt=Xt
-                        Xt=Xt+delta
+                        Xt=Xt+delta/2
                     elif boolean==1:
                         boolean=0
-                    if (f(Xt)<0) and Another_side==0:
+                    else:
+                        pass
+
+                    if (fxt<0) and Another_side==0:
                         Another_side=Xt
-                    if (f(Xt)>f(Xt+stepsize) and f(Xt)>0 and Critical_side==0) or (abs((old_Xt-Xt)/Xt) <= tolerance and Critical_side==0):
+                    else:
+                        pass
+
+                    if (fxt>f(Xt+stepsize) and fxt>0 and Critical_side==0) or (abs((old_Xt-Xt)/Xt) <= tolerance and Critical_side==0):
                         Critical_side=Xt
                         if Another_side==0:
                             old_Xt=Xt
                             Xt=Xt+delta
                             continue
+                        else:
+                            pass
+                    else:
+                        pass
                     old_Xt=Xt
                     Xt=Xt-delta/2
                 cnt_crt +=1
@@ -1203,13 +1224,18 @@ class ModelOSV(PhysicalProperty):
                 else:
                     pass
         else:
-            Xt= Xe_ass
-            old_Xt=1
+            Xt= 1
+            old_Xt=Xe_ass
             cnt_crt = 0
-
+            
             while 1:
-                critical_min=max([(1-Xe(Xt)+Xosv(Xt))/Xosv(Xt), 0])    # 왼쪽 경계값을 결정                
-                critical_max=Xe(Xt)
+                # 함수 갱신 텀
+                fxt = f(Xt)
+                xosv_tmp = Xosv(Xt)
+                xe_tmp = Xe(Xt)
+                # 계산
+                critical_min=max([(1-xe_tmp+xosv_tmp)/xosv_tmp, 0])    # 왼쪽 경계값을 결정                
+                critical_max=xe_tmp
                 delta=abs(Xt-old_Xt)
                 if Xt > critical_max:
                     if boolean==1:
@@ -1221,25 +1247,40 @@ class ModelOSV(PhysicalProperty):
                 else:
                     if boolean==1:
                         boolean=0
-                    if (f(Xt)>0 and Critical_side==0) or (abs((old_Xt-Xt)/Xt) <= tolerance and Critical_side==0):
+                    else:
+                        pass
+
+                    if (fxt>0 and Critical_side==0) or (abs((old_Xt-Xt)/Xt) <= tolerance and Critical_side==0):
                         Critical_side=Xt
                         if Another_side==0:
-
                             Xt=Xt-delta/2
+                            cnt_crt += 1
                             continue
-                    if Xt>critical_min and f(Xt)<0 and Another_side==0:
+                        else:
+                            pass
+                    else:
+                        pass
+
+                    if Xt>critical_min and fxt<0 and Another_side==0:
                         Another_side=Xt
+                    else:
+                        pass
+
                     old_Xt=Xt
                     Xt=Xt+delta/2
-                cnt_crt += 1
+                    cnt_crt += 1
+
                 if cnt_crt > 5000:
                     converged = 'Diverged'
                     return Critical_side, Another_side, converged
                 else:
                     pass
+
                 if (Critical_side != 0) and (Another_side != 0):
                     converged = 'Converged'
                     return Critical_side, Another_side, converged
+                else:
+                    continue
 
     def sub_bi(self, Xi, dh, lh, g, q, rdcp, lam, Xe_ass, st_cal, modCHF, stepsize, tolerance): 
         # q_cal 계산
@@ -1263,14 +1304,14 @@ class ModelOSV(PhysicalProperty):
         # q_cal 계산
         if modCHF == 'Park':
             q_cal_all = lambda Xt: self.calCHFPark(rdcp, dh, g, Xt)
-            alpha, gamma, k1, k2, k3, fxt, q_pre=q_cal_all(Xt_ass)
+            alpha, gamma, k1, k2, k3, fxt, q_pre = q_cal_all(Xt_ass)
             Xosv=-q_pre / st_cal / g / lam * 10**6
             Xe_pre=Xi + 4*q_pre*lh*10**6 / (lam*g*dh)
             return round(Xosv,4), round(Xe_pre,4), round(q_pre,4), round(Xt_pre,4), round(alpha, 4), round(gamma,4), round(k1,4), round(k2,4), round(k3,4), round(fxt, 4), converged
         elif modCHF == 'Deng':
             q_cal_all = lambda Xt: self.calCHFDeng(rdcp, dh, g, Xt)
-            alpha, gamma, fxt, q_pre=q_cal_all(Xt_ass)
-            Xosv=-q_pre / st_cal / g / lam * 10**6
+            alpha, gamma, fxt, q_pre = q_cal_all(Xt_ass)
+            Xosv = - q_pre / st_cal / g / lam * 10**6
             Xe_pre=Xi + 4*q_pre*lh*10**6 / (lam*g*dh)
             return round(Xosv,4), round(Xe_pre,4), round(q_pre,4), round(Xt_pre,4), round(alpha, 4), round(gamma,4), round(fxt, 4), converged
         else:
@@ -1353,7 +1394,7 @@ class ModelOSV(PhysicalProperty):
             converged = 'Converged'
             return root, converged
     
-    def calAlgCHFKim(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 0, stepsize = 0.0001, tolerance = 0.0001):
+    def calAlgCHFKim(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 'Deng', stepsize = 0.0001, tolerance = 0.0001):
         # 여기에 김경동 선배 알고리즘 추가
         if modCHF == "Park":
             xosv_cal, xeq, q_cal, xt_cal_new, alpha, gamma, k1, k2, k3, Fxt, converged = self.sub_bi(xi, dh, lh, g, q, rdcp, lam, xout, st_cal, modCHF, stepsize, tolerance)
@@ -1514,6 +1555,7 @@ class ModelOSV(PhysicalProperty):
         if flag_q == 1: # Measured qCHF를 기반으로 Xt 계산하는 알고리즘
             # 앞서 계산한 OSV 상관식으로 계산한 st이 삽입된 xosv_cal 계산
             xosv_cal = round(-(q * 10**6)/ (st_cal * g * lam),6) # XOSV 계산값 (based on qCHF)
+            
             if xi == 0: # xi가 0으로 들어올 경우, 
                 xb = round(xosv_cal,6)
             else:

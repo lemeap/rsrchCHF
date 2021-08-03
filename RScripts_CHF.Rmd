@@ -60,6 +60,20 @@ df = dbGetQuery(con, "SELECT T1.*, T2.pe, T2.re, T2.we, T2.bd, T2.bo, T2.fr, T2.
                 AND T2.p BETWEEN 100 AND 100
                 --AND T2.xe > 0.1;")
 
+df1 = dbGetQuery(con, "SELECT T1.*, T2.pe, T2.re, T2.we, T2.bd, T2.bo, T2.fr, T2.ca, T2.pr, T2.p, T2.pcrit, T2.rhof, T2.rhov, T2.muf, T2.muv
+                , T2.kf, T2.kv, T2.sigma, T2.dtin, T2.lam,T2.cpf, T2.cpv, T2.tsat, T2.v
+                FROM chf_calid_4deng_tb T1
+                INNER JOIN chf_prop_tb T2
+                ON T1.index = cast(T2.index as bigint)
+                AND T2.source LIKE 'D.H. Lee'
+                ")
+
+
+# Deng thesis에 나온 논문 결과를 비교하기 위한 데이터 추출
+#조건: Lee data
+#
+#P: 69 bar, D= 9.25 - 11.17 mm, L = 0.86 - 3.66 m, G = 1961 - 4173 kg/m2s, Xin = -0.26 - -0.008, Xe = 0 - 0.47
+
 
                 
 #--AND T1.xt_cal between 0 and 1

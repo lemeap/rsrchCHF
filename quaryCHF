@@ -11,29 +11,31 @@
   RMSPE(Root Mean Squared Percentage Error): 2.9749
 */  
 
+DROP TABLE IF EXISTS rawdata_chf_park_tb;
 CREATE TABLE rawdata_chf_park_tb
 (
-    run_id character varying(10)
-    tb_no character varying(10),
-    year_no integer,
-    source character varying(100)
-    refri character varying(20) 
-    geo character varying(10)
-    flow character varying(10)
-    dir character varying(10)
-    matio character varying(100)
-    matoi character varying(100)
-    hsur character varying(10)
-    doi numeric(10,6),
-    dio numeric(10,6),
-    dh numeric(10,6),
-    gap numeric(10,6),
-    lh numeric(10,6),
-    p numeric(10,6),
-    g numeric(15,6),
-    q numeric(10,6),
-    dtin numeric(10,6),
-    xe numeric(10,6)
+    run_id bigint
+    , tb_no character varying(10)
+    , year_no integer
+    , source character varying(200)
+    , refri character varying(10) 
+    , geo character varying(5)
+    , flow character varying(10)
+    , dir character varying(10)
+    , matio character varying(100)
+    , matoi character varying(100)
+    , hsur character varying(5)
+    , doi numeric(15,6)
+    , dio numeric(15,6)
+    , dh numeric(15,6)
+    , gap numeric(15,6)
+    , lh numeric(15,6)
+    , p numeric(15,6)
+    , g numeric(15,6)
+    , q numeric(15,6)
+    , degsubin numeric(15,6)
+    , xe numeric(15,6)
+	, xt_park numeric(15,6)
 )
 
 
@@ -75,3 +77,25 @@ select count(*), round(avg(cast(ei as numeric(8,4)))*100,4) as mse
 	, round(sqrt(avg(cast(ei2 as numeric(8,4))))*100,4) as rmse
 from jeong_sz_chf_tb;
 
+select *
+from chf_prop_tb;
+
+select count(*), cast(avg(q_err_deng)*100 as numeric(8,4)) as mse_deng
+	, cast(sqrt(avg(power(q_err_deng,2)))*100 as numeric(8,4)) as rmse_deng
+	, cast(avg(q_err_park)*100 as numeric(8,4)) as mse_park
+	, cast(sqrt(avg(power(q_err_park,2)))*100 as numeric(8,4)) as rmse_park
+from chf_err_64_tb
+where converged_deng LIKE '%Converged';
+
+select T1.xi, T1.xe, T5.dh, T5.lh, T5.g, T1.q
+, T5.xt_park as Xt_Original, T1.xt_cal_park as Xt_SZ_GS
+, T2.xt_cal_park as Xt_JS_GS, T3.xt_cal_park as Xt_SZ_BIS, T4.xt_cal_park as Xt_JS_BIS
+from chf_err_11_tb T1
+inner join chf_err_61_tb T2
+on T1.index = T2.index
+inner join chf_err_14_tb T3
+on T2.index = T3.index
+inner join chf_err_64_tb T4
+on T3.index = T4.index
+inner join res_tb T5
+on T4.index = T5.index;

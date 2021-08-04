@@ -13,32 +13,32 @@ class ModelOSV(PhysicalProperty):
     def calGriffith(self, q, g, cpf, lam):  # Griffith et al. (1958) 1/10
         dtOSV = 5 * (q * 10 ** 6) / (g * cpf / 10)
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     def calHancox(self, q, cpf, lam, kf, de, re, pr):  # Hancox and Nicoll (1971) 1/100배
         h = 0.4 * (re ** 0.662) * pr * (kf / de)
         dtOSV = (q * 10 ** 6) / h
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     def calCosta(self, geo, q, v, cpf, lam):  # Costa (1967) # costa 는 10배 정도 크게 나옴
         if geo == "C":
             dtOSV = 1.8 * (q) / (np.sqrt(v / 100))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         if geo == "R":
             dtOSV = 1.28 * (q) / (np.sqrt(v / 100))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = np.nan
             xOSV = np.nan
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calThom(self, q, g, lam, cpf, hfo):  # Thom (1966)
         dtOSV = 0.02 * hfo * (q * 10 ** 6) / (g * lam)
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     """
     def calStaub(self): # Staub (1968)
@@ -69,44 +69,44 @@ class ModelOSV(PhysicalProperty):
         if pe < 52000:
             dtOSV = (1 / 918.5) * ((q * 10 ** 6) * dh / kf) * pe ** 0.08
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = 34.84 * ((q * 10 ** 6) * dh / kf) * (1 / pe) ** 0.876
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calHa2018(self, rhof, rhov, lam, cpf, bo, v):
         ui = v / (1.18 * (9.8 * (rhof - rhov) / rhof ** 2) ** 0.25)
         if ui <= 1.55:
             dtOSV = 7.29 * (lam / cpf) * bo ** 0.8203
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = 32.94 * (lam / cpf) * bo ** 0.9016
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calDix(self, kf, q, dh, cpf, lam, re, pr):  # Dix (1971)
         h = 0.036 * (kf / dh) * (re ** 0.8) * (pr ** 0.3)
         dtOSV = 0.00135 * (q * 10 ** 6 / h) * np.sqrt(re)
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     def calKalitvianski(self, q, dh, kf, hsat, cpf, lam, pe):  # Kalitvianski (2000)
         if pe <= 36400:
             hosv = hsat + (5 / 455) * (((q * 10 ** 6) * dh * cpf) / kf)
             dtOSV = 1 # 나중에 수정 필요
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = (173.408 / 0.0065) * ((q * 10 ** 6) * dh / kf) * (1 / pe)
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calSekoguchi(self, q, g, cpf, lam):  # Sekoguchi et al. (1980)
         dtOSV = 13.5 * (lam / cpf) * ((q * 10 ** 6) / (lam * g)) ** 0.65
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     def calSahaZuber(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Saha and Zuber (1974)
         """
@@ -123,11 +123,11 @@ class ModelOSV(PhysicalProperty):
         if Pe <= 70000:
             dtOSV = 0.0022 * (q * (10 ** 6) * dh) / kf
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = 153.8 * (q * (10 ** 6)) / (g * cpf)
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calParkSahaZuber(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Park (2004)
         """
@@ -144,7 +144,7 @@ class ModelOSV(PhysicalProperty):
         if Pe <= 70000:
             dtOSV = 0.0022 * (q * (10 ** 6) * dh) / kf
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         elif Pe > 200000:
             dtOSV = (
                 0.08923 * np.exp(-(Pe * (kf ** 0.45) / (dh ** 0.53 * g ** 0.37)) / 25313.63287)
@@ -152,11 +152,11 @@ class ModelOSV(PhysicalProperty):
                 + 0.00146
             )
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = 153.8 * (q * (10 ** 6)) / (g * cpf)
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calMSZ(
         self, q, rhof, dh, g, cpf, kf, Pe, lam, hsur, geo, doi, dio, lh
@@ -188,47 +188,47 @@ class ModelOSV(PhysicalProperty):
                 if hsur == 1:
                     dtOSV = ((153.8 * (qq)) / (g * cpf)) * R_phpw_1h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
                 else:
                     dtOSV = ((153.8 * (qq)) / (g * cpf)) * R_phpw_2h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
             elif geo == "A":
                 if hsur == 1:
                     dtOSV = ((153.8 * (qq)) / (g * cpf)) * A_phpw_1h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
                 else:
                     dtOSV = ((153.8 * (qq)) / (g * cpf)) * A_phpw_2h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = 153.8 * (qq) / (g * cpf)
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         else:
             if geo == "R":
                 if hsur == 1:
                     dtOSV = (0.0022 * (qq * dh) / kf) * R_phpw_1h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
                 else:
                     dtOSV = (0.0022 * (qq * dh) / kf) * R_phpw_2h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
             elif geo == "A":
                 if hsur == 1:
                     dtOSV = (0.0022 * (qq ** dh) / kf) * A_phpw_1h
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
                 else:
                     dtOSV = 0.0022 * (qq * dh) / kf
                     xOSV = -cpf * dtOSV / lam
-                    return round(dtOSV, 4), round(xOSV, 4)
+                    return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = 0.0022 * (qq * dh) / kf
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
 
     def calLevy(self, sigma, dh, rhof, muf, kf, re, pr, cpf, g, q, lam, v):  # Levy (1967)
         """
@@ -254,15 +254,15 @@ class ModelOSV(PhysicalProperty):
         if YB > 30:
             dtOSV = (q * 10 ** 6) / h - 5 * Q * (pr + np.log(1 + 5 * pr) + 0.5 * np.log(YB / 30))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         elif YB <= 5:
             dtOSV = (q * 10 ** 6) / h - Q * pr * YB
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = (q * 10 ** 6) / h - 5 * Q * (pr + np.log(1 + pr * ((YB / 5) - 1)))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calBowring(self, p, q, v, lam, cpf):  # Bowring (1960)
         """
@@ -275,7 +275,7 @@ class ModelOSV(PhysicalProperty):
         """
         dtOSV = ((14 + p / 10)) * q / v
         xOSV = -cpf * dtOSV / lam
-        return round(dtOSV, 4), round(xOSV, 4)
+        return round(dtOSV,6), round(xOSV,6)
 
     def calUnal(self, q, pr, dh, v, cpf, kf, re, refri, lam):  # Unal (1975)
         """
@@ -294,20 +294,20 @@ class ModelOSV(PhysicalProperty):
             if v > 0.45:
                 dtOSV = (0.24 * (q * 10 ** 6)) / ((kf / dh) * 0.023 * re ** 0.8 * pr ** 0.4)
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif v <= 0.45:
                 dtOSV = (0.11 * (q * 10 ** 6)) / ((kf / dh) * 0.023 * re ** 0.8 * pr ** 0.4)
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         else:
             if v > 0.45:
                 dtOSV = (0.28 * (q * 10 ** 6)) / ((kf / dh) * 0.023 * re ** 0.8 * pr ** 0.4)
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif v <= 0.45:
                 dtOSV = (0.11 * (q * 10 ** 6)) / ((kf / dh) * 0.023 * re ** 0.8 * pr ** 0.4)
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
 
     def calEl(self, Bo_el, pr, lh, de, dtin, cpf, lam):  # El-Morshedy (2012)
         """
@@ -323,11 +323,11 @@ class ModelOSV(PhysicalProperty):
         if dtin is None:
             dtOSV = np.nan
             xOSV = np.nan
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = dtin * (Bo_el ** 0.0094) * (pr ** 1.606) / ((lh / de) ** 0.533)
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calJeong(self, q, rhof, rhov, dh, v, cpf, kf, Pe, lam, Pr, We, Ca):  # Jeong and Shim (2021)
         """
@@ -345,7 +345,7 @@ class ModelOSV(PhysicalProperty):
         if We <= 200:
             dtOSV = (q * (10 ** 6)) / (rhof * v * cpf * (17.25 * Pe ** -0.75 * Ca ** -0.15))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
         else:
             # dtOSV = (q * 10 ** 6 * dh) / (kf * (0.125 * Pe ** 0.75)) # for Nu
             dtOSV = (q * (10 ** 6)) / (
@@ -353,7 +353,7 @@ class ModelOSV(PhysicalProperty):
             )  # for St
             # dtOSV = (q * (10 ** 6)) / (rhof * v * cpf * (0.0065)) # for St
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calLee(self, q, doi, lh, cpf, dtin, dio, geo, hsur, dh, gsat, lam):
         """
@@ -390,24 +390,24 @@ class ModelOSV(PhysicalProperty):
             if hsur == 1:
                 dtOSV = (qq * R_heated_1h) / (R_flow * cpf * ((gsat + 27) / 0.58))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = (qq * R_heated_2h) / (R_flow * cpf * ((gsat + 27) / 0.58))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         elif geo == "A":
             if hsur == 1:
                 dtOSV = (qq * A_heated_1h) / (A_flow * cpf * ((gsat + 27) / 0.58))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = (qq * A_heated_2h) / (A_flow * cpf * ((gsat + 27) / 0.58))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = (qq * C_heated) / (C_flow * cpf * ((gsat + 27) / 0.58))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calKennedy(self, q, doi, lh, cpf, dtin, dio, geo, hsur, dh, gsat, lam):
         """
@@ -443,28 +443,28 @@ class ModelOSV(PhysicalProperty):
             if hsur == 1:
                 dtOSV = (qq * R_heated_1h) / (R_flow * cpf * (gsat * 1.11))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = (qq * R_heated_2h) / (R_flow * cpf * (gsat * 1.11))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         elif geo == "A":
             if hsur == 1:
                 dtOSV = (qq * A_heated_1h) / (A_flow * cpf * (gsat * 1.11))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif hsur == 2:
                 dtOSV = (qq * A_heated_2h) / (A_flow * cpf * (gsat * 1.11))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif hsur == 3:
                 dtOSV = (qq * A_heated_2h) / (A_flow * cpf * (gsat * 1.11))
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = (qq * C_heated) / (C_flow * cpf * (gsat * 1.11))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calAl_Yahia(self, q, doi, lh, cpf, dtin, dio, geo, hsur, dh, gsat, lam, p):
         """
@@ -506,7 +506,7 @@ class ModelOSV(PhysicalProperty):
                     / 100
                 )
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             else:
                 dtOSV = (
                     (qq * R_heated_2h)
@@ -514,7 +514,7 @@ class ModelOSV(PhysicalProperty):
                     / 100
                 )
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         elif geo == "A":
             if hsur == 1:
                 dtOSV = (
@@ -523,7 +523,7 @@ class ModelOSV(PhysicalProperty):
                     / 100
                 )
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif hsur == 2:
                 dtOSV = (
                     (qq * A_heated_2h)
@@ -531,7 +531,7 @@ class ModelOSV(PhysicalProperty):
                     / 100
                 )
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
             elif hsur == 2:
                 dtOSV = (
                     (qq * A_heated_2h)
@@ -539,11 +539,11 @@ class ModelOSV(PhysicalProperty):
                     / 100
                 )
                 xOSV = -cpf * dtOSV / lam
-                return round(dtOSV, 4), round(xOSV, 4)
+                return round(dtOSV,6), round(xOSV,6)
         elif geo == "C":
             dtOSV = (qq * C_heated) / (C_flow * cpf * (1.25 * gsat * (1.12 / p) ** 0.4)) / 100
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV, 4), round(xOSV, 4)
+            return round(dtOSV,6), round(xOSV,6)
 
     def calOfiSZ(self, df):
         """
@@ -1119,13 +1119,13 @@ class ModelOSV(PhysicalProperty):
         Park (2004) CHF correlation
         """
         # CHF 계산 (Park)
-        alpha = round(0.71+4.6*rdcp-5.33*rdcp**2,6)
-        gamma = round(0.1-0.58*rdcp+1.985*rdcp**2-1.54*rdcp**3,6)
-        k1 = round(-0.343+0.22626*np.log(g)-0.01409*np.log(g)**2,6)
+        alpha = round(0.71+4.6*rdcp-5.33*rdcp**2,16)
+        gamma = round(0.1-0.58*rdcp+1.985*rdcp**2-1.54*rdcp**3,16)
+        k1 = round(-0.343+0.22626*np.log(g)-0.01409*np.log(g)**2,16)
         k2 = 0.545
-        k3 = round(2.6404-6.5*k1+6.1565*k1**2,6)
-        fxt = round(np.sqrt(xt_cal*((1+xt_cal**2)**3)),6)
-        q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),6) # Park
+        k3 = round(2.6404-6.5*k1+6.1565*k1**2,16)
+        fxt = round(np.sqrt(xt_cal*((1+xt_cal**2)**3)),16)
+        q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
     def calCHFDeng(self, rdcp, dh, g, xt_cal):
@@ -1133,10 +1133,10 @@ class ModelOSV(PhysicalProperty):
         Deng (1997) CHF correlation
         """
         # CHF 계산 (Deng)
-        alpha = round(1.669-6.544*(rdcp-0.448)**2,6)
-        gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),6)
-        zxt = round(np.sqrt(g*xt_cal*((1+xt_cal**2)**3)),6)
-        q_cal = round((alpha/np.sqrt(dh)) * np.exp(-gamma*zxt),6) # Park
+        alpha = round(1.669-6.544*(rdcp-0.448)**2,16)
+        gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),16)
+        zxt = round(np.sqrt(g*xt_cal*((1+xt_cal**2)**3)),16)
+        q_cal = round((alpha/np.sqrt(dh)) * np.exp(-gamma*zxt),16) # Park
         return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
@@ -1159,9 +1159,13 @@ class ModelOSV(PhysicalProperty):
         if Xi<0:
             Xt = 0.1
             if Xe_ass < 0:
-                old_Xt = 1e-4
+                old_Xt = 1e-6
             else:
                 old_Xt = Xe_ass
+            #Critical_side = 1e-6
+            #Another_side = 0.5
+            #converged = 'Converged'
+            #return Critical_side, Another_side, converged
             
             Q=(Xosv(old_Xt)-Xosv(Xt))/(Xe(old_Xt)-Xe(Xt))
             Xe_over=(Q*Xe(Xt)-Xosv(Xt))/(Q-1)
@@ -1214,12 +1218,14 @@ class ModelOSV(PhysicalProperty):
 
                 if cnt_crt > 5000:
                     converged = 'Diverged'
+                    #print("Crtical_side : {}, Another_side : {}".format(Critical_side, Another_side))
                     return Critical_side, Another_side, converged
                 else:
                     pass
 
                 if (Critical_side != 0) and (Another_side != 0):
                     converged = 'Converged'
+                    #print("Crtical_side : {}, Another_side : {}".format(Critical_side, Another_side))
                     return Critical_side, Another_side, converged
                 else:
                     pass
@@ -1270,7 +1276,7 @@ class ModelOSV(PhysicalProperty):
                     Xt=Xt+delta/2
                     cnt_crt += 1
 
-                if cnt_crt > 5000:
+                if cnt_crt > 5e3:
                     converged = 'Diverged'
                     return Critical_side, Another_side, converged
                 else:
@@ -1292,31 +1298,33 @@ class ModelOSV(PhysicalProperty):
             q_cal = q
         Xosv=lambda Xt: -q_cal(Xt) / st_cal / g / lam * 10**6
         Xe=lambda Xt: Xi + 4*q_cal(Xt)*lh*10**6 / (lam*g*dh)
-                
+        Xb=lambda Xt: max((Xosv(Xt),Xi))
+        f=lambda Xt: Xosv(Xt)*np.log((Xe(Xt)-Xt)/Xb(Xt))+np.log((1-Xe(Xt)+Xosv(Xt)-Xosv(Xt)*Xt)/(1-Xb(Xt)+Xosv(Xt)))
+
         if Xi==0:
             Xt_ass, converged=self.Xb_0( Xi, q, lh, lam, dh, g, rdcp, modCHF)
         else:
             Critical_side, Another_side, converged=self.sub_find_critical(dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance)
             Xt_ass, converged=self.bisection(Critical_side, Another_side, Xi, g, q, rdcp, st_cal, lam, dh, lh, modCHF, stepsize, tolerance)
-        
+            
         # 최종 결과를 CHF 모델로 예측
         Xt_pre=Xt_ass
+        print("Xt_pre {}".format(Xt_pre))
         # q_cal 계산
         if modCHF == 'Park':
             q_cal_all = lambda Xt: self.calCHFPark(rdcp, dh, g, Xt)
-            alpha, gamma, k1, k2, k3, fxt, q_pre = q_cal_all(Xt_ass)
+            alpha, gamma, k1, k2, k3, fxt, q_pre = q_cal_all(Xt_pre)
             Xosv=-q_pre / st_cal / g / lam * 10**6
             Xe_pre=Xi + 4*q_pre*lh*10**6 / (lam*g*dh)
-            return round(Xosv,4), round(Xe_pre,4), round(q_pre,4), round(Xt_pre,4), round(alpha, 4), round(gamma,4), round(k1,4), round(k2,4), round(k3,4), round(fxt, 4), converged
+            return round(Xosv,6), round(Xe_pre,6), round(q_pre,6), round(Xt_pre,6), round(alpha,6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(fxt,6), converged
         elif modCHF == 'Deng':
             q_cal_all = lambda Xt: self.calCHFDeng(rdcp, dh, g, Xt)
-            alpha, gamma, fxt, q_pre = q_cal_all(Xt_ass)
+            alpha, gamma, fxt, q_pre = q_cal_all(Xt_pre)
             Xosv = - q_pre / st_cal / g / lam * 10**6
             Xe_pre=Xi + 4*q_pre*lh*10**6 / (lam*g*dh)
-            return round(Xosv,4), round(Xe_pre,4), round(q_pre,4), round(Xt_pre,4), round(alpha, 4), round(gamma,4), round(fxt, 4), converged
+            return round(Xosv,6), round(Xe_pre,6), round(q_pre,6), round(Xt_pre,6), round(alpha,6), round(gamma,6), round(fxt,6), converged
         else:
             q_cal = q
-        
         
     def Xb_0(self, Xi, q, lh, lam, dh, g, rdcp, modCHF):
         # q_cal 계산
@@ -1371,13 +1379,15 @@ class ModelOSV(PhysicalProperty):
         cnt = 0
         while abs(Critical_Side-Another_Side) > tolerance: # 이분법의 찾는범위가 eps값보다 작아지면 while문을 빠져나옴        
             CENTER=(Critical_Side+Another_Side)/2   # 현재 왼쪽값과 오른쪽값의 중간지점을 계산         
-            f_r=f(Critical_Side)   # 크리티컬에 가까운 경계쪽의 함수값을 계산                
-            f_c=f(CENTER)   # 구간 중간의 함수값을 계산   
+            f_r=f(Critical_Side)   # 크리티컬에 가까운 경계쪽의 함수값을 계산
+            f_c=f(CENTER)   # 구간 중간의 함수값을 계산
             cnt +=1
             if f_r * f_c > 0:    # 양 함수값의 부호판별
                 Critical_Side=CENTER   # 같다면 다른구간 탐색
+                #print("Critical_Side : {}".format(Critical_Side))
             else:
                 Another_Side=CENTER   # 다르다면 현재 구간을 이등분하여 탐색
+                #print("Another_Side : {}".format(Another_Side))
             
             cnt += 1
             if cnt > 5000:
@@ -1385,6 +1395,7 @@ class ModelOSV(PhysicalProperty):
                 return Critical_Side, converged
             else:
                 pass
+
         if cnt == 0:
             root = Critical_Side - Another_Side
             converged = 'Converged'
@@ -1399,153 +1410,109 @@ class ModelOSV(PhysicalProperty):
         if modCHF == "Park":
             xosv_cal, xeq, q_cal, xt_cal_new, alpha, gamma, k1, k2, k3, Fxt, converged = self.sub_bi(xi, dh, lh, g, q, rdcp, lam, xout, st_cal, modCHF, stepsize, tolerance)
             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-            return round(xosv_cal,6), round(xeq,4), round(q_cal,4), round(xt_cal_new,4), round(alpha, 4), round(gamma,4), round(k1,4), round(k2,4), round(k3,4), round(Fxt, 4), converged
+            return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha, 6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(Fxt, 6), converged
         else:
             xosv_cal, xeq, q_cal, xt_cal_new, alpha, gamma, Fxt, converged = self.sub_bi(xi, dh, lh, g, q, rdcp, lam, xout, st_cal, modCHF, stepsize, tolerance)
             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-            return round(xosv_cal,6), round(xeq,4), round(q_cal,4), round(xt_cal_new,4), round(alpha, 4), round(gamma,4), round(Fxt, 4), converged
+            return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha, 6), round(gamma,6), round(Fxt, 6), converged
 
-    def calAlgCHFPark(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 0, stepsize = 0.0001, tolerance = 0.0001):
-        # Lambda 함수 설정
-        func = lambda x: xosv_cal * np.log((xeq -x)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
-        funky = lambda x: xosv_cal*np.log((xeq-x)/xb)
-        line = lambda x: -np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
-                
+    def calAlgCHFPark(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 'Deng', stepsize = 0.0001, tolerance = 0.0001):
         # Flag 변수 설정
         cnt = 0 # Xt 계산 알고리즘 반복회수 계산
         cnt_nan = 0 # Xt_cal_new return 시도 실패 회수 계산
         
         while 1: # Xt_old와 Xt_new의 수렴여부 판단
-            #print("수렴 여부 판단 cnt_nan = {}, cnt = {}".format(cnt_nan, cnt))
-            if cnt_nan == 1000:
-                converged = 'Diverged'
-                print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
-            else:
-                while 1: # Xt 찾기
+            #print("수렴 여부 판단 cnt_nan = {}, cnt = {}".format(cnt_nan, cnt))            
+            # Xt_cal_old 계산
+            #xt_cal_old = 0.0001
+
+            while 1: # Xt 찾기
+                if cnt_nan == 5e3: # 종료 조건
+                    xt_cal_new = xt_cal_new
+                    Fxt = 0
+                    converged = 'Diverged'
+                    print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
                     # q_cal 계산
                     if modCHF == 'Park':
-                        q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)[6]
+                        alpha, gamma, k1, k2, k3, zxt, q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)
+                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha,6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(Fxt,6), converged
                     elif modCHF == 'Deng':
-                        q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal_old)
+                        alpha, gamma, zxt, q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal_old)
+                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha,6), round(gamma,6), round(Fxt,6), converged
+                    else: # It is impossible process
+                        q_cal = q 
+                        return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)        
+                else:
+                    pass
+
+                # q_cal 계산
+                if modCHF == 'Park':
+                    q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)[6]
+                elif modCHF == 'Deng':
+                    q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal_old)[3]
+                else:
+                    q_cal = q
+                
+                # Xosv, Xeq, Xb 계산
+                xeq = round(xi + (4*q_cal*10**6*lh)/(lam*g*dh),16)
+                xosv_cal = round(-(q_cal/(st_cal*g*lam))*(10**6),16) # XOSV 계산값 (based on qCHF)
+                xb = round(max(xi, xosv_cal), 16)
+                                
+                xosv_cal = round(-(q_cal/(st_cal*g*lam))*(10**6),16) # XOSV 계산값 (based on qCHF)
+                if xi == 0: # xi가 0으로 들어올 경우, 
+                    xb = round(xosv_cal,16)
+                else:
+                    xb = round(max(xi, xosv_cal), 16)
+                 # Park 모델을 사용하기 위한 임시
+
+                # Gauss-Seidel calculation 계산하기
+                try:
+                    cnt += 1
+                    C1 = round(1 - xeq + xosv_cal - xosv_cal * xt_cal_old,16)
+                    C2 = 1 - xb + xosv_cal
+
+                    if C1/C2 > 0:
+                        C3_tmp = round(C1/C2,16)
                     else:
-                        q_cal = q
-
-                    # Xosv, Xeq, Xb 계산
-                    xosv_cal = round(-(q_cal * 10**6)/ (st_cal * g * lam),6) # XOSV 계산값 (based on qCHF)
-                    
-                    if xi == 0: # xi가 0으로 들어올 경우, 
-                        xb = round(xosv_cal,6)
+                        C3_tmp = 1e-20
+                    C3 = -np.log(C3_tmp)/xosv_cal
+                    C4 = np.exp(C3)
+                finally:
+                    xt_cal = xeq - xb*C4
+                    # New 제약조건
+                    if xt_cal < 0: # xeq < 0이면 결국 q는 nan이 발생. xeq <0일 경우 강제로 1e-4로 결정
+                        xt_cal = 1e-4
                     else:
-                        xb = round(max(xi, xosv_cal), 6)
+                        pass
 
-                    xeq = round(xi+ (4*q_cal*10**6*lh)/(lam*g*dh),6)
-
-                    # Xt 계산하기
-                    try:
-                        cnt += 1
-                        xt_cal_init = xt_cal_old
-                        while 1:
-                            try: 
-                                Fxt_old = xosv_cal * np.log((xeq - xt_cal_old)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*xt_cal_old)/(1-xb+xosv_cal)) 
-                            finally:
-                                if np.isinf(Fxt_old) == 1 or np.isnan(Fxt_old) == 1: # 만약 Fxt가 없으면 xt_cal_old를 stepsize만큼 이동
-                                    if xt_cal_old < 0 or xeq > 1: # Xt_cal_old, xeq의 값이 없으면 xout = xt와 같다.
-                                        xt_cal_old = xeq
-                                        Fxt = 1
-                                        Fxt_old = 1
-                                        break
-                                    
-                                    if xi >0:
-                                        xt_cal_old -= stepsize
-                                        continue
-                                    else:
-                                        xt_cal_old += stepsize
-                                        continue
-                                else:
-                                    if Fxt_old < 0:
-                                        Fxt = 0
-                                        xt_cal_old = xeq
-                                        tmp = -1
-                                        break
-                                    else:
-                                        Fxt = Fxt_old
-                                        tmp = 1
-                                        break  
-                    finally:                            
-                        # 종료조건 1 : 반복횟수 100회 이상
-                        if cnt > 5000:
-                            xt_cal = xt_cal_old
-                            Fxt = Fxt_old
-                            converged = 'Diverged'
-                            break
-
-                        # 종료조건 2 : xi, Fxt 값에 따른 수렴 여부 파악
-                        if xi > 0: # inlet quality > 0이면 그래프 개형은 왼쪽으로 발산
-                            if np.abs(Fxt/Fxt_old-1) < tolerance*10:
-                                Fxt = Fxt_old
-                                xt_cal = xt_cal_old
-                                converged = 'Numerical, Converged'
-                                break
-                            else:
-                                if Fxt_old < 0 :
-                                    if tmp == -1:
-                                        Fxt = 0
-                                        xt_cal = xt_cal_old
-                                        converged = 'Numerical, Converged'
-                                        break
-                                    else:
-                                        # Bisection Method로 값 찾기
-                                        xt_cal = round(bisect(func, xt_cal_old+stepsize, xt_cal_old)[0],6)
-                                        Fxt = 0
-                                        converged = 'Bisection, Converged'
-                                        break
-                                else:
-                                    cnt += 1 # 계산회수 1회 추가
-                                    Fxt = Fxt_old
-                                    xt_cal_old -= stepsize
-                                    continue
-                        elif xi < 0: # inlet quality < 0이면 그래프 개형은 오른쪽으로 발산
-                            if np.abs(Fxt/Fxt_old-1) < tolerance*10:
-                                Fxt = Fxt_old
-                                xt_cal = xt_cal_old
-                                converged = 'Numerical, Converged'
-                                break
-                            else:
-                                if Fxt_old < 0 :
-                                    if tmp == -1:
-                                        Fxt = 0
-                                        xt_cal = xt_cal_old
-                                        converged = 'Numerical, Converged'
-                                        break
-                                    else:
-                                        # Bisection Method로 값 찾기
-                                        xt_cal = round(bisect(func, xt_cal_old+stepsize, xt_cal_old)[0],6)
-                                        Fxt = 0
-                                        converged = 'Bisection, Converged'
-                                        break
-                                else:
-                                    cnt += 1 # 계산회수 1회 추가
-                                    Fxt = Fxt_old
-                                    xt_cal_old += stepsize
-                                    continue
-                        else:
+                    if xt_cal > 0:
+                        if np.abs(xt_cal/xt_cal_old-1) < tolerance:
                             Fxt = 0
-                            xt_cal = xeq
-                            converged = 'Xi==0, Converged'
-                            break
-            # Xt_old Xt_new 계산
-            
-            xt_cal_new = 0.99 * xt_cal_init + 0.01 * xt_cal
-            
-            if np.abs(xt_cal_new - xt_cal_init) < tolerance:
-                print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
-            else:
-                xt_cal_old = xt_cal_new
-                cnt_nan += 1
-                del Fxt_old
-                continue
+                            converged = 'Numerical, Converged'
+                            print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
+                            # q_cal 계산
+                            if modCHF == 'Park':
+                                alpha, gamma, k1, k2, k3, zxt, q_cal = self.calCHFPark(rdcp, dh, g, xt_cal)
+                                return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal,6), round(alpha,6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(Fxt,6), converged
+                            elif modCHF == 'Deng':
+                                alpha, gamma, zxt, q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal)
+                                return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal,6), round(alpha,6), round(gamma,6), round(Fxt,6), converged
+                            else: # It is impossible process
+                                q_cal = q 
+                                return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
+                        else:
+                            xt_cal_new = 0.99 * xt_cal_old  + 0.01 * xt_cal
+                            xt_cal_old = xt_cal_new
+                            tmp = xt_cal
+                            C4_old = C4
+                            cnt_nan += 1
+                            continue
+                    else:
+                        xt_cal_old = 0.9999*xt_cal_old + 0.0001 * xt_cal
+                        tmp = xt_cal
+                        cnt_nan +=1
+                        C4_old  = C4
+                        continue
 
     def calIntgrXt(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 0, stepsize = 0.0001, tolerance = 0.0001, flag_q = 1): # Measured CHF 기반 알고리즘
         # Lambda 함수 설정
@@ -1603,7 +1570,7 @@ class ModelOSV(PhysicalProperty):
                             q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal)
                         else:
                             q_cal = q  
-                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4) 
+                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6) 
                     else:
                         pass
                     cnt += 1 # 시작 계산횟수 1회
@@ -1631,7 +1598,7 @@ class ModelOSV(PhysicalProperty):
                         else:
                             q_cal = q  
                         print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                     
                     # 종료조건 2: nan이 5번 이상이면 종료
                     if cnt_nan > 5:
@@ -1646,7 +1613,7 @@ class ModelOSV(PhysicalProperty):
                         else:
                             q_cal = q  
                         print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                     
                     # 종료조건 3 : xi, Fxt 값에 따른 수렴 여부 파악
                     if xi > 0: # inlet quality > 0이면 그래프 개형은 왼쪽으로 발산
@@ -1662,7 +1629,7 @@ class ModelOSV(PhysicalProperty):
                             else:
                                 q_cal = q  
                             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                            return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                            return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                         else:
                             if Fxt < 0:
                                 cnt += 1
@@ -1683,7 +1650,7 @@ class ModelOSV(PhysicalProperty):
                                     else:
                                         q_cal = q  
                                     print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                                    return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                                    return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                             else:
                                 cnt += 1
                                 if np.isnan(Fxt) == 1:
@@ -1707,7 +1674,7 @@ class ModelOSV(PhysicalProperty):
                             else:
                                 q_cal = q  
                             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                            return round(xt_cal,6), converged, Fxt, round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                            return round(xt_cal,6), converged, Fxt, round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                         else:
                             if Fxt < 0:
                                 cnt += 1
@@ -1729,7 +1696,7 @@ class ModelOSV(PhysicalProperty):
                                     else:
                                         q_cal = q                                    
                                     print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                                    return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                                    return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                             else:
                                 cnt += 1
                                 if np.isnan(Fxt) == 1:
@@ -1753,7 +1720,7 @@ class ModelOSV(PhysicalProperty):
                         else:
                             q_cal = q
                         print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                        return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                     
             cnt_nan = 0 # nan값을 삭제하고 초기화
         else:
@@ -1772,7 +1739,7 @@ class ModelOSV(PhysicalProperty):
                         Fxt = 0
                         converged = 'Diverged'
                         print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                        return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                        return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                     else:
                         pass
 
@@ -1829,7 +1796,7 @@ class ModelOSV(PhysicalProperty):
                             Fxt = 0
                             converged = 'Numerical, Converged'
                             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
-                            return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal, 4), round(xeq, 4), round(q_cal, 4)
+                            return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                         else:                            
                             if xt_cal > 0:
                                 xt_cal_old = xt_cal_new

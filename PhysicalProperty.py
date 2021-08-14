@@ -136,8 +136,12 @@ class PhysicalProperty():
             xout = -(cpf * dtin) / lam + (qq * C_heated) / (C_flow * g * lam)
             return xout
 
-    def calXi(self, cpf, dtin, lam): # Inlet thermal equilibrium quality
+    def calXi1(self, cpf, dtin, lam): # Inlet thermal equilibrium quality
         Xi = - (cpf * dtin) / lam
+        return Xi
+
+    def calXi2(self, degsubin, lam):
+        Xi = - (degsubin * 1e3) / lam
         return Xi
 
     def calNu(self, q, dh, kf, tosv):  # Nusselt number

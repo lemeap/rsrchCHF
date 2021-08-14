@@ -1416,29 +1416,40 @@ class ModelOSV(PhysicalProperty):
             print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
             return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha, 6), round(gamma,6), round(Fxt, 6), converged
 
-    def calAlgCHFPark(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 'Deng', stepsize = 0.0001, tolerance = 0.0001):
+    def calAlgCHFPark(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 'Deng', stepsize = 0.0001, tolerance = 0.0001, init_flag = 0):
         # Flag 변수 설정
         cnt = 0 # Xt 계산 알고리즘 반복회수 계산
         cnt_nan = 0 # Xt_cal_new return 시도 실패 회수 계산
         
         while 1: # Xt_old와 Xt_new의 수렴여부 판단
-            #print("수렴 여부 판단 cnt_nan = {}, cnt = {}".format(cnt_nan, cnt))            
-            # Xt_cal_old 계산
-            #xt_cal_old = 0.0001
-
+            # xt_cal 초기값 (New 제약조건)
+            if init_flag == -1:
+                xt_cal_old = 1e-6
+                init_flag = 1 # 재귀문 1회만 돌고 종료를 위해 값을 반환
+            else:
+                if xout < 0 or xi == 0:
+                    xt_cal_old = 1e-6
+                    init_flag = 1
+                else:
+                    xt_cal_old = xout
+                    init_flag = -1 # Xe 초기값 설정이 오류가 났을 경우 처리 flag
+            
             while 1: # Xt 찾기
                 if cnt_nan == 5e3: # 종료 조건
-                    xt_cal_new = xt_cal_new
+                    if init_flag == -1:
+                        return self.calAlgCHFPark(i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = modCHF, stepsize = stepsize, tolerance = tolerance, init_flag = -1)
+                    else:
+                        pass
                     Fxt = 0
                     converged = 'Diverged'
                     print("{}번째 데이터는 {}되었습니다.".format(i+1, converged))
                     # q_cal 계산
                     if modCHF == 'Park':
-                        alpha, gamma, k1, k2, k3, zxt, q_cal = self.calCHFPark(rdcp, dh, g, xt_cal_old)
-                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha,6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(Fxt,6), converged
+                        alpha, gamma, k1, k2, k3, zxt, q_cal = self.calCHFPark(rdcp, dh, g, xt_cal)
+                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal,6), round(alpha,6), round(gamma,6), round(k1,6), round(k2,6), round(k3,6), round(Fxt,6), converged
                     elif modCHF == 'Deng':
-                        alpha, gamma, zxt, q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal_old)
-                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal_new,6), round(alpha,6), round(gamma,6), round(Fxt,6), converged
+                        alpha, gamma, zxt, q_cal = self.calCHFDeng(rdcp, dh, g, xt_cal)
+                        return round(xosv_cal,6), round(xeq,6), round(q_cal,6), round(xt_cal,6), round(alpha,6), round(gamma,6), round(Fxt,6), converged
                     else: # It is impossible process
                         q_cal = q 
                         return round(xt_cal_new,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)        
@@ -1501,12 +1512,20 @@ class ModelOSV(PhysicalProperty):
                                 q_cal = q 
                                 return round(xt_cal,6), converged, round(Fxt,6), round(xosv_cal,6), round(xeq,6), round(q_cal,6)
                         else:
-                            xt_cal_new = 0.99 * xt_cal_old  + 0.01 * xt_cal
-                            xt_cal_old = xt_cal_new
-                            tmp = xt_cal
-                            C4_old = C4
-                            cnt_nan += 1
-                            continue
+                            if np.abs(xt_cal/xt_cal_old-1) > 1:
+                                xt_cal_new = 0.9999 * xt_cal_old  + 0.0001 * xt_cal
+                                xt_cal_old = xt_cal_new
+                                tmp = xt_cal
+                                C4_old = C4
+                                cnt_nan += 1
+                                continue
+                            else:
+                                xt_cal_new = 0.99 * xt_cal_old  + 0.01 * xt_cal
+                                xt_cal_old = xt_cal_new
+                                tmp = xt_cal
+                                C4_old = C4
+                                cnt_nan += 1
+                                continue                    
                     else:
                         xt_cal_old = 0.9999*xt_cal_old + 0.0001 * xt_cal
                         tmp = xt_cal

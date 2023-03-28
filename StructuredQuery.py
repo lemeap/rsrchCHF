@@ -1,21 +1,29 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import sqlalchemy as sa
-import psycopg2 as pg2
+import psycopg2 as pg2 # PostgreSQL
+import pymysql as pys # MySQL
 import io
+
+global conn
 
 class StructuredQuery:
     def __init__(self):
         print("Construct connection string and update")
-        print("SQL_OSV is successfully started.")
+        print("SQL library is successfully started.")
 
-    def connect(self, host, dbname, user, port, password):
+    def connect(self, host, dbname, user, port, password, service):
         """
         Database 연결
         """
-        db_engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(user,password,host,port,dbname))
-        conn = pg2.connect(database = dbname, host = host, user = user, password = password)
-        return (conn, db_engine)
+        if service == 'postgresql':     
+            db_engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(user,password,host,port,dbname))
+            conn = pg2.connect(database = dbname, host = host, user = user, password = password)
+            return (conn, db_engine)
+        else:
+            conn = pys.connect(host = host, user = user, password = password, cursorclass=pys.cursors.DictCursor)
+            db_engine = 0 # return empty value
+            return (db_engine, conn)
 
     def read_sql(self, query, db_engine):
         """

@@ -3,112 +3,15 @@ import time
 from CoolProp.CoolProp import PropsSI
 from PhysicalProperty import *
 from Numeric import *
+import sympy as sp
 
 
-class ModelOSV(PhysicalProperty):
+class Model(PhysicalProperty):
     def __init__(self):
-        print("Model_OSV is successfully started.")
+        print("Models of boiling heat transfer is successfully started.")
 
     # Models or correlations
-    def calGriffith(self, q, g, cpf, lam):  # Griffith et al. (1958) 1/10
-        dtOSV = 5 * (q * 10 ** 6) / (g * cpf / 10)
-        xOSV = -cpf * dtOSV / lam
-        return round(dtOSV,6), round(xOSV,6)
-
-    def calHancox(self, q, cpf, lam, kf, de, re, pr):  # Hancox and Nicoll (1971) 1/100배
-        h = 0.4 * (re ** 0.662) * pr * (kf / de)
-        dtOSV = (q * 10 ** 6) / h
-        xOSV = -cpf * dtOSV / lam
-        return round(dtOSV,6), round(xOSV,6)
-
-    def calCosta(self, geo, q, v, cpf, lam):  # Costa (1967) # costa 는 10배 정도 크게 나옴
-        if geo == "C":
-            dtOSV = 1.8 * (q) / (np.sqrt(v / 100))
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-        if geo == "R":
-            dtOSV = 1.28 * (q) / (np.sqrt(v / 100))
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-        else:
-            dtOSV = np.nan
-            xOSV = np.nan
-            return round(dtOSV,6), round(xOSV,6)
-
-    def calThom(self, q, g, lam, cpf, hfo):  # Thom (1966)
-        dtOSV = 0.02 * hfo * (q * 10 ** 6) / (g * lam)
-        xOSV = -cpf * dtOSV / lam
-        return round(dtOSV,6), round(xOSV,6)
-
-    """
-    def calStaub(self): # Staub (1968)
-        pass
-
-    def calRogers(self,): # Rogers et al. (1987)
-        theta = 30
-        c1 = 2 + 3*np.cos(theta) - np.cos(theta)**3
-        c2 = np.pi - theta + np.cos(theta)*np.sin(theta)
-        c3 = np.sin(theta)*(np.cos(theta-10) - np.cos(theta+10))
-        cs = 58 / (theta + 5) + 0.14
-        rb = (3/(4*np.pi)) * ((c2 / c1) * cd * (u**2/9.8)) * (np.sqrt(1 + (8*np.pi**2/3)*(c1*c3/c2**2)*(cs/cd**2)*(9.8 * sigma / (rhof*u ** 4))) - 1)
-        reb = rhof * u * (2*rb) / muf
-        if reb < 20:
-            cd = 24 / reb
-        else:
-            cd = 1.22
-        cc = np.sqrt(1+)
-        f = 0.046*re**(-0.2)
-        tau = (0.046/8)*re**(-0.2)
-        YB = (rhof/muf)*np.sqrt(tau/rhof) * (1+np.cos(theta)) * (3/(4*np.pi))*(c2/c1)*(cd*muf**2/9.8)*cc 
-    
-    def calJinghui(self,): # Jinghui and Rogers (1988)
-        pass
-    """
-
-    def calHa2005(self, q, dh, kf, cpf, lam, pe):  # Ha et al. (2005)
-        if pe < 52000:
-            dtOSV = (1 / 918.5) * ((q * 10 ** 6) * dh / kf) * pe ** 0.08
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-        else:
-            dtOSV = 34.84 * ((q * 10 ** 6) * dh / kf) * (1 / pe) ** 0.876
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-
-    def calHa2018(self, rhof, rhov, lam, cpf, bo, v):
-        ui = v / (1.18 * (9.8 * (rhof - rhov) / rhof ** 2) ** 0.25)
-        if ui <= 1.55:
-            dtOSV = 7.29 * (lam / cpf) * bo ** 0.8203
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-        else:
-            dtOSV = 32.94 * (lam / cpf) * bo ** 0.9016
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-
-    def calDix(self, kf, q, dh, cpf, lam, re, pr):  # Dix (1971)
-        h = 0.036 * (kf / dh) * (re ** 0.8) * (pr ** 0.3)
-        dtOSV = 0.00135 * (q * 10 ** 6 / h) * np.sqrt(re)
-        xOSV = -cpf * dtOSV / lam
-        return round(dtOSV,6), round(xOSV,6)
-
-    def calKalitvianski(self, q, dh, kf, hsat, cpf, lam, pe):  # Kalitvianski (2000)
-        if pe <= 36400:
-            hosv = hsat + (5 / 455) * (((q * 10 ** 6) * dh * cpf) / kf)
-            dtOSV = 1 # 나중에 수정 필요
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-        else:
-            dtOSV = (173.408 / 0.0065) * ((q * 10 ** 6) * dh / kf) * (1 / pe)
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-
-    def calSekoguchi(self, q, g, cpf, lam):  # Sekoguchi et al. (1980)
-        dtOSV = 13.5 * (lam / cpf) * ((q * 10 ** 6) / (lam * g)) ** 0.65
-        xOSV = -cpf * dtOSV / lam
-        return round(dtOSV,6), round(xOSV,6)
-
-    def calSahaZuber(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Saha and Zuber (1974)
+    def cal_SZ(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Saha and Zuber (1974)
         """
         :param q: Heat flux [MW/m2]
         :param rhof: Liquid density [kg/m3]
@@ -129,7 +32,7 @@ class ModelOSV(PhysicalProperty):
             xOSV = -cpf * dtOSV / lam
             return round(dtOSV,6), round(xOSV,6)
 
-    def calParkSahaZuber(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Park (2004)
+    def cal_PSZ(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Park (2004)
         """
         :param q: Heat flux [MW/m2]
         :param rhof: Liquid density [kg/m3]
@@ -158,7 +61,7 @@ class ModelOSV(PhysicalProperty):
             xOSV = -cpf * dtOSV / lam
             return round(dtOSV,6), round(xOSV,6)
 
-    def calMSZ(
+    def cal_SZde(
         self, q, rhof, dh, g, cpf, kf, Pe, lam, hsur, geo, doi, dio, lh
     ):  # Modified Saha and Zuber (2013)
         """
@@ -230,7 +133,7 @@ class ModelOSV(PhysicalProperty):
                 xOSV = -cpf * dtOSV / lam
                 return round(dtOSV,6), round(xOSV,6)
 
-    def calLevy(self, sigma, dh, rhof, muf, kf, re, pr, cpf, g, q, lam, v):  # Levy (1967)
+    def cal_Levy(self, sigma, dh, rhof, muf, kf, re, pr, cpf, g, q, lam, v):  # Levy (1967)
         """
         :param sigma: Suface tension [N/m]
         :param dh: Hydraulic diameter [m]
@@ -264,7 +167,7 @@ class ModelOSV(PhysicalProperty):
             xOSV = -cpf * dtOSV / lam
             return round(dtOSV,6), round(xOSV,6)
 
-    def calBowring(self, p, q, v, lam, cpf):  # Bowring (1960)
+    def cal_Bowr(self, p, q, v, lam, cpf):  # Bowring (1960)
         """
         :param p: pressure [bar]
         :param q: Heat flux [MW/m2]
@@ -277,7 +180,7 @@ class ModelOSV(PhysicalProperty):
         xOSV = -cpf * dtOSV / lam
         return round(dtOSV,6), round(xOSV,6)
 
-    def calUnal(self, q, pr, dh, v, cpf, kf, re, refri, lam):  # Unal (1975)
+    def cal_Unal(self, q, pr, dh, v, cpf, kf, re, refri, lam):  # Unal (1975)
         """
         :param q: Heat flux [MW/m2]
         :param pr: prandtl number [-]
@@ -309,29 +212,8 @@ class ModelOSV(PhysicalProperty):
                 xOSV = -cpf * dtOSV / lam
                 return round(dtOSV,6), round(xOSV,6)
 
-    def calEl(self, Bo_el, pr, lh, de, dtin, cpf, lam):  # El-Morshedy (2012)
+    def cal_Jeong(self, geo, q, dh, dl, v, rhof, rhov, muf, muv, cpf, kf, lam, sigma, Pe, Pr):  # Jeong and Shim (2021)
         """
-        :param Bo_el: Boiling number of El-Mosherdy [-]
-        :param pr: prandtl number [-]
-        :param lh: Heated length of channel [m]
-        :param dh: Hydraulic diameter [m][
-        :param dtin: Inlet liquid subcooling [K]
-        :param cpf: Liquid specific heat [J/kg-K]
-        :param lam: Heat of vaporization [J/kg]
-        :return: Equilibrium thermal quality [-]
-        """
-        if dtin is None:
-            dtOSV = np.nan
-            xOSV = np.nan
-            return round(dtOSV,6), round(xOSV,6)
-        else:
-            dtOSV = dtin * (Bo_el ** 0.0094) * (pr ** 1.606) / ((lh / de) ** 0.533)
-            xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
-
-    def calJeong(self, q, rhof, rhov, dh, v, cpf, kf, Pe, lam, Pr, We, Ca):  # Jeong and Shim (2021)
-        """
-
         :param q: Heat flux [MW/m2]
         :param rhof: Liquid density [kg/m3]
         :param dh: Hydraulic diameter [m]
@@ -342,18 +224,22 @@ class ModelOSV(PhysicalProperty):
         :param lam: Heat of vaporization [J/kg]
         :return: Equilibrium thermal quality [-]
         """
-        if We <= 200:
-            dtOSV = (q * (10 ** 6)) / (rhof * v * cpf * (17.25 * Pe ** -0.75 * Ca ** -0.15))
+        lc = np.sqrt(sigma/(9.8*(rhof-rhov)))
+        Re = rhof*v*dh/muf
+        We = np.sqrt(rhof*v**2*dl/sigma)
+        if We <= 10:
+            #dtOSV = ((v ** 2)/ (2*rhof*( 0.8877* (Ca/Bo) ** (1.155))))*10**6
+            #dtOSV = (q * 10 ** 6) / (cpf * rhof * v * (( 190 * Re ** -0.91 * Pr ** -0.91)))
+            dtOSV = (q * 10 ** 6) / (cpf * rhof * v * (( 450 / (Pe))*(dl/dh) ** -0.25)) #2023/02/16
+            #dtOSV = (q * 10 ** 6) / (cpf * rhof * v * (( 370 / (Re * Pr) ))) #2023/02/20
+            #dtOSV = (q * (10 ** 6) * dh) / (kf*(865 * (Bo) ** 0.075))
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
+            return round(dtOSV,4), round(xOSV,6), round(We, 4)
         else:
-            # dtOSV = (q * 10 ** 6 * dh) / (kf * (0.125 * Pe ** 0.75)) # for Nu
-            dtOSV = (q * (10 ** 6)) / (
-                rhof * v * cpf * (0.0965 * Pe ** -0.225 * (rhof / (rhof - rhov) ) ** 1.5)
-            )  # for St
-            # dtOSV = (q * (10 ** 6)) / (rhof * v * cpf * (0.0065)) # for St
+            #dtOSV = (q * 10 ** 6 ) / (cpf * rhof * v * (0.122 * Re ** -0.25 * Pr ** -0.25))
+            dtOSV = (q * 10 ** 6 ) / (cpf * rhof * v * (0.0705 * Re ** -0.20 * Pr ** -0.20)) #2023/02/16
             xOSV = -cpf * dtOSV / lam
-            return round(dtOSV,6), round(xOSV,6)
+            return round(dtOSV,4), round(xOSV,6), round(We, 4)
 
     def calLee(self, q, doi, lh, cpf, dtin, dio, geo, hsur, dh, gsat, lam):
         """
@@ -1128,7 +1014,7 @@ class ModelOSV(PhysicalProperty):
         q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
-    def calCHFDeng(self, rdcp, dh, g, xt_cal):
+    def calCHFDeng(self, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.1):
         """
         Deng (1997) CHF correlation
         """
@@ -1534,6 +1420,7 @@ class ModelOSV(PhysicalProperty):
                         continue
 
     def calIntgrXt(self, i, rdcp, dh, lh, g, q, xi, xout, xt_cal_old, st_cal, lam, modCHF = 0, stepsize = 0.0001, tolerance = 0.0001, flag_q = 1): # Measured CHF 기반 알고리즘
+
         # Lambda 함수 설정
         func = lambda x: xosv_cal * np.log((xeq -x)/xb) + np.log((1-xeq+xosv_cal-xosv_cal*x)/(1-xb+xosv_cal))
         funky = lambda x: xosv_cal*np.log((xeq-x)/xb)
@@ -1833,3 +1720,74 @@ class ModelOSV(PhysicalProperty):
                             #print(i, " + ", cnt_nan)
                             continue                     
                         """
+    
+    def cal_xt(self, xi, xosv, xe = 0.001):
+        xb = round(max(xi, xosv), 12)
+
+        # Define the equation
+        x, y = sp.symbols('x y')
+
+        eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
+
+        if xb >= 0.0:
+            print("Saturated flow boinling condition")
+            try:
+                sol = round(sp.nsolve(eq, (0, xe), solver='bisect'), 12)
+            except:
+                sol = round(xe, 12)
+        else:
+            print("Subcooled flow boiling condition")
+            if xe >= 1.0:
+                sol = round(xe, 12)
+            else:
+                try:
+                    sol = round(sp.nsolve(eq, (xe, 1), solver='bisect'),12)
+                except:
+                    sol = round(xe,12)
+        return sol
+
+    def cal_new(self, i, rdcp, dh, lh, g, q, xi, xe, rhof, cpf, kf, Pe, lam):
+        """
+        1) cal alpha, gamma
+        2) cal qchf,i
+        2) cal xosv
+        3) cal xt_old
+        4) cal qchf
+        5) cal xt_new
+        6) comp xt_old vs. xt_new
+        7) Yes -> qchf
+        8) No -> go to 4
+        """
+        tolerance = 0.1
+        
+       
+        while 1:
+             # Prepare: calculate alpha, gamma
+            alpha = round(1.669-6.544*(rdcp-0.448)**2,16)
+            gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),16)
+
+            # Step 1: calculate initial Xosv 
+            old_xosv = self.cal_sz(q, rhof, dh, g, cpf, kf, Pe, lam)    
+
+            # Step 2: calculate initial Xt
+            old_xt = self.cal_xt(xi, old_xosv, xe)
+
+            # Step 3: calculate initial qCHF
+            old_qchf = self.calCHFDeng(rdcp, dh, g, old_xt)
+
+            # Step 4: calculate new Xosv
+            new_xosv = self.cal_sz(old_qchf, rhof, dh, g, cpf, kf, Pe, lam)
+
+            # Step 5: calculate new Xt
+            new_xt = self.cal_xt(xi, new_xosv, xe)
+
+            # Step 5: calculate new qCHF
+            new_qchf = self.calCHFDeng(rdcp, dh, g, new_xt)
+
+            # Evaluation
+            temp_eval = abs((new_xt - old_xt)/old_xt)
+            if temp_eval <= tolerance:
+                return new_qchf
+            else:
+                old_qchf = (old_qchf + new_qchf)/2
+

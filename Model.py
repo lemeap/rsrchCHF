@@ -1022,6 +1022,7 @@ class Model(PhysicalProperty):
         alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
         gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
         zxt = round((1+xt_cal**2)**3,12)
+        #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
         if xt_cal <= 0.1:
             q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal)),12) # Deng
         else:

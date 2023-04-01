@@ -111,8 +111,8 @@ class PhysicalProperty():
             Qratio = (qq * C_heated) / (C_flow * g * cpf * dtin)
             return Qratio
         
-    def cal_xe(self, q, doi, dio, geo, hs, g, enthin, lh, lam):
-        qq = q * (10 ** 6)
+    def cal_xe(self, q, doi, dio, geo, hs, g, enthin, lh, lam, ch = 1):
+        qq = q * (10 ** 3) # Lambda = kJ/kg
         R_heated_1h = doi * lh
         R_heated_2h = 2 * doi * lh
         R_flow = doi * dio
@@ -121,19 +121,23 @@ class PhysicalProperty():
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
         C_heated = (np.pi) * doi * lh
         C_flow = (np.pi / 4) * doi ** 2
-        if geo == 'R':
-            if hs == 1: # Lambda [=] J/kg
-                xe = - (enthin) / lam + (qq * R_heated_1h) / (R_flow * g * lam)
-                return xe
+        if ch == 0:
+            if geo == 'R':
+                if hs == 1: # Lambda [=] kJ/kg
+                    xe = - (enthin) / lam + (qq * R_heated_1h) / (R_flow * g * lam)
+                    return xe
+                else:
+                    xe = -(enthin) / lam + (qq * R_heated_2h) / (R_flow * g * lam)
+                    return xe
+            elif geo == 'A':
+                if hs == 1:
+                    xe = -(enthin) / lam + (qq * A_heated_1h) / (A_flow * g * lam)
+                    return xe
+                else:
+                    xe = -(enthin) / lam + (qq * A_heated_2h) / (A_flow * g * lam)
+                    return xe
             else:
-                xe = -(enthin) / lam + (qq * R_heated_2h) / (R_flow * g * lam)
-                return xe
-        elif geo == 'A':
-            if hs == 1:
-                xe = -(enthin) / lam + (qq * A_heated_1h) / (A_flow * g * lam)
-                return xe
-            else:
-                xe = -(enthin) / lam + (qq * A_heated_2h) / (A_flow * g * lam)
+                xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)
                 return xe
         else:
             xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)

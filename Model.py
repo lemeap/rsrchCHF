@@ -25,11 +25,11 @@ class Model(PhysicalProperty):
         """
         if Pe <= 70000:
             dtOSV = 0.0022 * (q * (10 ** 6) * dh) / kf
-            xOSV = -cpf * dtOSV / lam
+            xOSV = -cpf * dtOSV / (lam * 10 **3) 
             return round(dtOSV,6), round(xOSV,6)
         else:
             dtOSV = 153.8 * (q * (10 ** 6)) / (g * cpf)
-            xOSV = -cpf * dtOSV / lam
+            xOSV = -cpf * dtOSV / (lam * 10 **3)
             return round(dtOSV,6), round(xOSV,6)
 
     def cal_PSZ(self, q, rhof, dh, g, cpf, kf, Pe, lam):  # Park (2004)
@@ -1014,15 +1014,18 @@ class Model(PhysicalProperty):
         q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
-    def calCHFDeng(self, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.1):
+    def calCHFDeng(self, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.5):
         """
         Deng (1997) CHF correlation
         """
         # CHF 계산 (Deng)
-        alpha = round(1.669-6.544*(rdcp-0.448)**2,16)
-        gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),16)
-        zxt = round(np.sqrt(g*xt_cal*((1+xt_cal**2)**3)),16)
-        q_cal = round((alpha/np.sqrt(dh)) * np.exp(-gamma*zxt),16) # Park
+        alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
+        gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
+        zxt = round((1+xt_cal**2)**3,12)
+        if xt_cal <= 0.1:
+            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal)),12) # Deng
+        else:
+            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal*zxt)),12) # Deng
         return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
@@ -1721,7 +1724,7 @@ class Model(PhysicalProperty):
                             continue                     
                         """
     
-    def cal_xt(self, xi, xosv, xe = 0.001):
+    def cal_xt(self, xi, xosv, xe = 0.1):
         xb = round(max(xi, xosv), 12)
 
         # Define the equation
@@ -1730,13 +1733,13 @@ class Model(PhysicalProperty):
         eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
 
         if xb >= 0.0:
-            print("Saturated flow boinling condition")
+            #print("Saturated flow boinling condition")
             try:
                 sol = round(sp.nsolve(eq, (0, xe), solver='bisect'), 12)
             except:
                 sol = round(xe, 12)
         else:
-            print("Subcooled flow boiling condition")
+            #print("Subcooled flow boiling condition")
             if xe >= 1.0:
                 sol = round(xe, 12)
             else:
@@ -1744,6 +1747,14 @@ class Model(PhysicalProperty):
                     sol = round(sp.nsolve(eq, (xe, 1), solver='bisect'),12)
                 except:
                     sol = round(xe,12)
+        
+        if sol < 0:
+            sol = 0.1
+        elif sol > 1:
+            sol = round(xe, 12)
+        else:
+            pass
+
         return sol
 
     def cal_new(self, i, rdcp, dh, lh, g, q, xi, xe, rhof, cpf, kf, Pe, lam):

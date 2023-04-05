@@ -1029,6 +1029,18 @@ class Model(PhysicalProperty):
             q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal*zxt)),12) # Deng
         return alpha, gamma, zxt, q_cal
 
+    def calCHFJeog(self, rdcp=0.1, dh=0.1, g=0.1, lam = 1500, xt_cal=0.5):
+        """
+        Jeong (2023) CHF correlation
+        """
+        # Set alpha and gamma
+        alpha = 123
+        gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
+        zxt = round((1+xt_cal**2)**3,12)
+        #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
+        q_cal = round((alpha/lam) * math.exp(-gamma*(g*xt_cal)/lam),12) # Deng
+        return alpha, gamma, zxt, q_cal
+
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
         boolean=1
         # q_cal 계산

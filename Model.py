@@ -1023,23 +1023,41 @@ class Model(PhysicalProperty):
         gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
         zxt = round((1+xt_cal**2)**3,12)
         #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
-        if xt_cal <= 0.1:
-            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal)),12) # Deng
-        else:
-            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*math.sqrt(g*xt_cal*zxt)),12) # Deng
+        q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
         return alpha, gamma, zxt, q_cal
 
-    def calCHFJeog(self, rdcp=0.1, dh=0.1, g=0.1, lam = 1500, xt_cal=0.5):
+    def calCHFJeong(self, dh, g, cpv, cpf, rhov, rhof, lam, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
-        # Set alpha and gamma
-        alpha = 123
-        gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
-        zxt = round((1+xt_cal**2)**3,12)
-        #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
-        q_cal = round((alpha/lam) * math.exp(-gamma*(g*xt_cal)/lam),12) # Deng
-        return alpha, gamma, zxt, q_cal
+        # calculate scaling factor
+        S = (rhov*cpv/(cpf*rhof))^0.5
+        # Set alpha parameters
+        a_y0 = -0.08253
+        a_xc = 0.3534
+        a_A = 2.0986
+        a_w1 = 0.4982
+        a_w2 = 0.06853
+        a_w3 = 0.15166
+
+        # Set gamma parameters
+        b_y0 = 0.0652
+        b_xc = 0.472
+        b_A = 0.1472
+        b_w1 = 0.1172
+        b_w2 = 0.0573
+        b_w3 = 0.0266   
+        zxt = (g*xt_cal)^0.5*(1+xt_cal**2)**3
+        alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
+        gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
+
+        try:
+            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            return alpha, gamma, zxt, q_cal
+        except:
+            print("this step occurs an error: q_cal back to ")
+            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
         boolean=1
@@ -1737,7 +1755,7 @@ class Model(PhysicalProperty):
                             continue                     
                         """
     
-    def cal_xt(self, xi, xosv, xe = 0.1):
+    def cal_xt(self, xi, xosv, org_xe, xe = 0.1):
         xb = round(max(xi, xosv), 12)
 
         # Define the equation
@@ -1764,9 +1782,10 @@ class Model(PhysicalProperty):
         if sol < 0:
             sol = 0.1
         elif sol > 1:
-            sol = round(xe, 12)
+            sol = round(org_xe, 12)
         else:
             pass
+        
 
         return sol
 

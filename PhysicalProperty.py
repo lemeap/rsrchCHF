@@ -143,6 +143,28 @@ class PhysicalProperty():
             xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)
             return xe
 
+    def cal_ent(self, q, doi, dio, geo, hs, g, enthin, lh, lam):
+        qq = q * (10 ** 3) # Lambda = kJ/kg
+        R_heated_1h = doi * lh
+        R_heated_2h = 2 * doi * lh
+        R_flow = doi * dio
+        A_heated_1h = (np.pi * dio) * lh
+        A_heated_2h = (np.pi * (dio + doi)) * lh
+        A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
+        C_heated = (np.pi) * doi * lh
+        C_flow = (np.pi / 4) * doi ** 2
+
+        if geo == 'R':
+            enth = enthin + (qq / R_flow) / (R_flow * g)
+            return enth
+        elif geo == 'A':
+            enth = enthin + (qq / A_flow) / (A_flow * g)
+            return enth
+        else:
+            enth = enthin + (qq / C_flow) / (C_flow * g)
+            return enth
+
+
     def calXi1(self, cpf, dtin, lam): # Inlet thermal equilibrium quality
         Xi = - (cpf * dtin) / lam
         return Xi

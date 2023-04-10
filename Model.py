@@ -1031,7 +1031,7 @@ class Model(PhysicalProperty):
         Jeong (2023) CHF correlation
         """
         # calculate scaling factor
-        S = (rhov*cpv/(cpf*rhof))^0.5
+        S = (rhov*cpv/(cpf*rhof))**0.5
         # Set alpha parameters
         a_y0 = -0.08253
         a_xc = 0.3534
@@ -1047,7 +1047,7 @@ class Model(PhysicalProperty):
         b_w1 = 0.1172
         b_w2 = 0.0573
         b_w3 = 0.0266   
-        zxt = (g*xt_cal)^0.5*(1+xt_cal**2)**3
+        zxt = (1+xt_cal**2)**3
         alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
         gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
 
@@ -1762,6 +1762,9 @@ class Model(PhysicalProperty):
         x, y = sp.symbols('x y')
 
         eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
+        # New rate equation
+        #Xt = 0 => must Xosv
+        #eq = xosv* sp.log((xe-x)/xosv) + sp.log((1-xe+xosv-xosv*x)/(1-xosv+xosv))
 
         if xb >= 0.0:
             #print("Saturated flow boinling condition")
@@ -1778,15 +1781,7 @@ class Model(PhysicalProperty):
                     sol = round(sp.nsolve(eq, (xe, 1), solver='bisect'),12)
                 except:
                     sol = round(xe,12)
-        
-        if sol < 0:
-            sol = 0.1
-        elif sol > 1:
-            sol = round(org_xe, 12)
-        else:
-            pass
-        
-
+    
         return sol
 
     def cal_new(self, i, rdcp, dh, lh, g, q, xi, xe, rhof, cpf, kf, Pe, lam):

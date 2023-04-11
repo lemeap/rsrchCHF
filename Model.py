@@ -1018,13 +1018,16 @@ class Model(PhysicalProperty):
         """
         Deng (1997) CHF correlation
         """
-        # CHF 계산 (Deng)
-        alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
-        gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
-        zxt = round((1+xt_cal**2)**3,12)
+        try:
+            # CHF 계산 (Deng)
+            alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
+            gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
+            zxt = round((1+xt_cal**2)**3,12)
         #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
-        q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
-        return alpha, gamma, zxt, q_cal
+            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            return alpha, gamma, zxt, q_cal
+        except:
+            q_cal = 0.001
 
     def calCHFJeong(self, dh, g, cpv, cpf, rhov, rhof, lam, xt_cal=0.5):
         """
@@ -1046,17 +1049,17 @@ class Model(PhysicalProperty):
         b_A = 0.1472
         b_w1 = 0.1172
         b_w2 = 0.0573
-        b_w3 = 0.0266   
-        zxt = (1+xt_cal**2)**3
-        alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
-        gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
-
+        b_w3 = 0.0266
+        # Calculate new CHF heat flux
         try:
+            zxt = (1+xt_cal**2)**3
+            alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
+            gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
             q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
             print("this step occurs an error: q_cal back to ")
-            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            q_cal = 0.0001
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):

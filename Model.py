@@ -1023,7 +1023,17 @@ class Model(PhysicalProperty):
             alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
             gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
             zxt = round((1+xt_cal**2)**3,12)
-        #zxt = xt_cal*(1+math.exp(xt_cal))/math.exp(-xt_cal)
+
+            # zxt check
+            if zxt <0:
+                zxt = 1
+            else:
+                pass
+
+            # Replace NaN values with a default value (e.g., 1)
+            zxt = np.where(np.isnan(zxt), 1, zxt)
+
+            # Calcuate qcal
             q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
@@ -1053,6 +1063,15 @@ class Model(PhysicalProperty):
         # Calculate new CHF heat flux
         try:
             zxt = (1+xt_cal**2)**3
+
+            # Replace NaN values with a default value (e.g., 1)
+            zxt = np.where(np.isnan(zxt), 1, zxt)
+
+            if zxt <0:
+                zxt = 1
+            else:
+                pass
+            
             alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
             gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
             q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng

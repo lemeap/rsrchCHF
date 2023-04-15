@@ -1020,24 +1020,25 @@ class Model(PhysicalProperty):
         """
         try:
             # CHF 계산 (Deng)
-            alpha = round(1.669-6.544*(rdcp-0.448)**2,12)
+            alpha = 1.669-6.544*(rdcp-0.448)**2
             gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
             zxt = round((1+xt_cal**2)**3,12)
 
-            # zxt check
-            if zxt <0:
-                zxt = 1
-            else:
-                pass
-
             # Replace NaN values with a default value (e.g., 1)
-            zxt = np.where(np.isnan(zxt), 1, zxt)
+            #zxt = np.where(np.isnan(zxt), 1, zxt)
 
             # Calcuate qcal
-            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            if xt_cal <= 0.1:
+                fzxt = round(math.exp(-gamma*(g*xt_cal)**0.5), 12) # f(Xt)
+            else:
+                fzxt = round(math.exp(-gamma*(g*xt_cal*zxt)**0.5), 12) # f(Xt)
+            
+            q_cal = round((alpha/math.sqrt(dh)) * fzxt ,12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
-            q_cal = 0.001
+            #zxt = 1
+            #q_cal = 1
+            return alpha, gamma, zxt, q_cal
 
     def calCHFJeong(self, dh, g, cpv, cpf, rhov, rhof, lam, xt_cal=0.5):
         """
@@ -1062,23 +1063,22 @@ class Model(PhysicalProperty):
         b_w3 = 0.0266
         # Calculate new CHF heat flux
         try:
-            zxt = (1+xt_cal**2)**3
-
-            # Replace NaN values with a default value (e.g., 1)
-            zxt = np.where(np.isnan(zxt), 1, zxt)
-
-            if zxt <0:
-                zxt = 1
-            else:
-                pass
-            
             alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
             gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
-            q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            
+            zxt = (1+xt_cal**2)**3
+            # Replace NaN values with a default value (e.g., 1)
+            #zxt = np.where(np.isnan(zxt), 1, zxt)
+            
+            if xt_cal <= 0.1:
+                q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal)**0.5),12) # Deng
+            else:
+                q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
-            print("this step occurs an error: q_cal back to ")
-            q_cal = 0.0001
+            print("this step occurs an error: q_cal back to set by 0.0001 and zxt = 1.0")
+            #zxt = 1
+            #q_cal = 1
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):
@@ -1777,77 +1777,26 @@ class Model(PhysicalProperty):
                             continue                     
                         """
     
-    def cal_xt(self, xi, xosv, org_xe, xe = 0.1):
+    def cal_xt(self, xi, xosv, org_xe, xe):
+        # Set local thermodynamic equilibrium quality
         xb = round(max(xi, xosv), 12)
 
-        # Define the equation
+        # Define the rate equation
         x, y = sp.symbols('x y')
-
         eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
-        # New rate equation
-        #Xt = 0 => must Xosv
-        #eq = xosv* sp.log((xe-x)/xosv) + sp.log((1-xe+xosv-xosv*x)/(1-xosv+xosv))
-
+        
         if xb >= 0.0:
             #print("Saturated flow boinling condition")
             try:
-                sol = round(sp.nsolve(eq, (0, xe), solver='bisect'), 12)
+                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'), 12)
             except:
                 sol = round(xe, 12)
         else:
             #print("Subcooled flow boiling condition")
-            if xe >= 1.0:
-                sol = round(xe, 12)
-            else:
-                try:
-                    sol = round(sp.nsolve(eq, (xe, 1), solver='bisect'),12)
-                except:
-                    sol = round(xe,12)
-    
-        return sol
-
-    def cal_new(self, i, rdcp, dh, lh, g, q, xi, xe, rhof, cpf, kf, Pe, lam):
-        """
-        1) cal alpha, gamma
-        2) cal qchf,i
-        2) cal xosv
-        3) cal xt_old
-        4) cal qchf
-        5) cal xt_new
-        6) comp xt_old vs. xt_new
-        7) Yes -> qchf
-        8) No -> go to 4
-        """
-        tolerance = 0.1
-        
-       
-        while 1:
-             # Prepare: calculate alpha, gamma
-            alpha = round(1.669-6.544*(rdcp-0.448)**2,16)
-            gamma = round(0.06523 + (0.1045/(np.sqrt((2*np.pi)*(np.log(rdcp))**2))) * np.exp(-5.413*((np.log(rdcp)+0.4537)**2/(np.log(rdcp)**2))),16)
-
-            # Step 1: calculate initial Xosv 
-            old_xosv = self.cal_sz(q, rhof, dh, g, cpf, kf, Pe, lam)    
-
-            # Step 2: calculate initial Xt
-            old_xt = self.cal_xt(xi, old_xosv, xe)
-
-            # Step 3: calculate initial qCHF
-            old_qchf = self.calCHFDeng(rdcp, dh, g, old_xt)
-
-            # Step 4: calculate new Xosv
-            new_xosv = self.cal_sz(old_qchf, rhof, dh, g, cpf, kf, Pe, lam)
-
-            # Step 5: calculate new Xt
-            new_xt = self.cal_xt(xi, new_xosv, xe)
-
-            # Step 5: calculate new qCHF
-            new_qchf = self.calCHFDeng(rdcp, dh, g, new_xt)
-
-            # Evaluation
-            temp_eval = abs((new_xt - old_xt)/old_xt)
-            if temp_eval <= tolerance:
-                return new_qchf
-            else:
-                old_qchf = (old_qchf + new_qchf)/2
-
+            try:
+                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'),12)
+            except:
+                sol = round(xe,12)
+                
+        # Return value
+        return float(sol)

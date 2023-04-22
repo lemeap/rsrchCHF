@@ -1028,10 +1028,7 @@ class Model(PhysicalProperty):
             #zxt = np.where(np.isnan(zxt), 1, zxt)
 
             # Calcuate qcal
-            if xt_cal <= 0.1:
-                fzxt = round(math.exp(-gamma*(g*xt_cal)**0.5), 12) # f(Xt)
-            else:
-                fzxt = round(math.exp(-gamma*(g*xt_cal*zxt)**0.5), 12) # f(Xt)
+            fzxt = round(math.exp(-gamma*(g*xt_cal*zxt)**0.5), 12) # f(Xt)
             
             q_cal = round((alpha/math.sqrt(dh)) * fzxt ,12) # Deng
             return alpha, gamma, zxt, q_cal
@@ -1040,40 +1037,30 @@ class Model(PhysicalProperty):
             #q_cal = 1
             return alpha, gamma, zxt, q_cal
 
-    def calCHFJeong(self, dh, g, cpv, cpf, rhov, rhof, lam, xt_cal=0.5):
+    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
-        # calculate scaling factor
-        S = (rhov*cpv/(cpf*rhof))**0.5
-        # Set alpha parameters
-        a_y0 = -0.08253
-        a_xc = 0.3534
-        a_A = 2.0986
-        a_w1 = 0.4982
-        a_w2 = 0.06853
-        a_w3 = 0.15166
-
-        # Set gamma parameters
-        b_y0 = 0.0652
-        b_xc = 0.472
-        b_A = 0.1472
-        b_w1 = 0.1172
-        b_w2 = 0.0573
-        b_w3 = 0.0266
+        if geo == "A":
+            if hs == 1:
+                bta = rhov*q*(doi/dio)
+            elif hs == 2:
+                bta = (rhov*q)*(doi/dio)
+            else:
+                bta = q*(dio/dh)
+        else:
+            bta = rhov*q*doi+math.sqrt(muf/muv)
+        
+        kpa = g*dh**(cpv/cpf)
+        vf_alpha = 1/(1+bta*math.exp(-kpa*xosv))
+        pcr = round(pcrit/(pcrit - p), 6)
         # Calculate new CHF heat flux
         try:
-            alpha = a_y0 + a_A*(1/(1+math.exp(-(S-a_xc+a_w1/2)/a_w2)))*(1-1/(1+math.exp(-(S-a_xc-a_w1/2)/a_w3)))
-            gamma = b_y0 + b_A*(1/(1+math.exp(-(S-b_xc+b_w1/2)/b_w2)))*(1-1/(1+math.exp(-(S-b_xc-b_w1/2)/b_w3)))
+            alpha = -73.5741*math.exp(-pcr/0.2359) + 1.3299
+            gamma = (2.5e-5)*math.exp(pcr/0.275)+0.055
+            zxt = (1 + xosv + vf_alpha + xt_cal**2)**3
             
-            zxt = (1+xt_cal**2)**3
-            # Replace NaN values with a default value (e.g., 1)
-            #zxt = np.where(np.isnan(zxt), 1, zxt)
-            
-            if xt_cal <= 0.1:
-                q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal)**0.5),12) # Deng
-            else:
-                q_cal = round((alpha/math.sqrt(dh)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            q_cal = round((alpha/math.sqrt(doi)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
             print("this step occurs an error: q_cal back to set by 0.0001 and zxt = 1.0")
@@ -1797,6 +1784,6 @@ class Model(PhysicalProperty):
                 sol = round(sp.nsolve(eq, (0, 1), solver='bisect'),12)
             except:
                 sol = round(xe,12)
-                
+                        
         # Return value
         return float(sol)

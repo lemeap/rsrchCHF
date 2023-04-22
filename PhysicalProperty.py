@@ -142,6 +142,38 @@ class PhysicalProperty():
         else:
             xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)
             return xe
+    
+    def cal_xi(self, q, doi, dio, geo, hs, g, xe, lh, lam, ch = 1):
+        qq = q * (10 ** 3) # Lambda = kJ/kg
+        R_heated_1h = doi * lh
+        R_heated_2h = 2 * doi * lh
+        R_flow = doi * dio
+        A_heated_1h = (np.pi * dio) * lh
+        A_heated_2h = (np.pi * (dio + doi)) * lh
+        A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
+        C_heated = (np.pi) * doi * lh
+        C_flow = (np.pi / 4) * doi ** 2
+        if ch == 0:
+            if geo == 'R':
+                if hs == 1: # Lambda [=] kJ/kg
+                    xi = (qq * R_heated_1h) / (R_flow * g * lam) - xe
+                    return xi
+                else:
+                    xi = (qq * R_heated_2h) / (R_flow * g * lam) - xe
+                    return xi
+            elif geo == 'A':
+                if hs == 1:
+                    xi = (qq * A_heated_1h) / (A_flow * g * lam) - xe
+                    return xi
+                else:
+                    xi = (qq * A_heated_2h) / (A_flow * g * lam) - xe
+                    return xi
+            else:
+                xi =(qq * C_heated) / (C_flow * g * lam) - xe
+                return xi
+        else:
+            xi = (qq * C_heated) / (C_flow * g * lam) - xe
+            return xi
 
     def cal_ent(self, q, doi, dio, geo, hs, g, enthin, lh, lam):
         qq = q * (10 ** 3) # Lambda = kJ/kg

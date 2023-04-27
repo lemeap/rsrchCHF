@@ -1021,7 +1021,7 @@ class Model(PhysicalProperty):
         try:
             # CHF 계산 (Deng)
             alpha = 1.669-6.544*(rdcp-0.448)**2
-            gamma = round(0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2))),16)
+            gamma = 0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2)))
             zxt = round((1+xt_cal**2)**3,12)
 
             # Replace NaN values with a default value (e.g., 1)
@@ -1037,7 +1037,7 @@ class Model(PhysicalProperty):
             #q_cal = 1
             return alpha, gamma, zxt, q_cal
 
-    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, xt_cal=0.5):
+    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, alpha, gamma, lam, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
@@ -1054,18 +1054,20 @@ class Model(PhysicalProperty):
         kpa = g*dh**(cpv/cpf)
         vf_alpha = 1/(1+bta*math.exp(-kpa*xosv))
         pcr = round(pcrit/(pcrit - p), 6)
+        rdcp = p/pcrit
+
+        
+
         # Calculate new CHF heat flux
         try:
-            alpha = -73.5741*math.exp(-pcr/0.2359) + 1.3299
-            gamma = (2.5e-5)*math.exp(pcr/0.275)+0.055
             zxt = (1 + xosv + vf_alpha + xt_cal**2)**3
-            
             q_cal = round((alpha/math.sqrt(doi)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            
+
             return alpha, gamma, zxt, q_cal
         except:
             print("this step occurs an error: q_cal back to set by 0.0001 and zxt = 1.0")
-            #zxt = 1
-            #q_cal = 1
+            q_cal = round((alpha*lam/(1e3*math.sqrt(doi))) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):

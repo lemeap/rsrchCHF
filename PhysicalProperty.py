@@ -111,89 +111,133 @@ class PhysicalProperty():
             Qratio = (qq * C_heated) / (C_flow * g * cpf * dtin)
             return Qratio
         
-    def cal_xe(self, q, doi, dio, geo, hs, g, enthin, lh, lam, ch = 1):
-        qq = q * (10 ** 3) # Lambda = kJ/kg
-        R_heated_1h = doi * lh
-        R_heated_2h = 2 * doi * lh
-        R_flow = doi * dio
-        A_heated_1h = (np.pi * dio) * lh
-        A_heated_2h = (np.pi * (dio + doi)) * lh
+    def cal_xe(self, q, q2, doi, dio, geo, hs, g, enthin, lh, lam, ch = 1):
+        # calculate heated section parameter
+        if hs == 1:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * dio)
+            R_heated = doi
+            qsol = q * (10 ** 3) # Lambda = kJ/kg
+        elif hs == 2:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * doi)
+            R_heated = 2 * doi
+            qsol = (q + q2) * (10 ** 3)
+        else:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * (dio + doi))       
+            R_heated = 2 * doi
+            qsol = (q + q2) * (10 ** 3)
+        
+        # calculate flow area
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
-        C_heated = (np.pi) * doi * lh
+        R_flow = doi * dio
         C_flow = (np.pi / 4) * doi ** 2
+
+        # calculate quality
+        # Set enthin sign
+        if enthin > 0:
+            xi  = - enthin / lam
+        else:
+            xi = enthin / lam
+
         if ch == 0:
             if geo == 'R':
-                if hs == 1: # Lambda [=] kJ/kg
-                    xe = - (enthin) / lam + (qq * R_heated_1h) / (R_flow * g * lam)
-                    return xe
-                else:
-                    xe = -(enthin) / lam + (qq * R_heated_2h) / (R_flow * g * lam)
-                    return xe
-            elif geo == 'A':
-                if hs == 1:
-                    xe = -(enthin) / lam + (qq * A_heated_1h) / (A_flow * g * lam)
-                    return xe
-                else:
-                    xe = -(enthin) / lam + (qq * A_heated_2h) / (A_flow * g * lam)
-                    return xe
-            else:
-                xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)
+                xe = xi + (qsol * R_heated * lh) / (R_flow * g * lam)
+                return xe                
+            elif geo == 'A':                
+                xe = xi + (qsol * A_heated * lh) / (A_flow * g * lam)
                 return xe
-        else:
-            xe = -(enthin) / lam + (qq * C_heated) / (C_flow * g * lam)
+            else:
+                xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
+                return xe
+        elif ch == 1:
+            xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
             return xe
+        else:
+            if geo == 'R':
+                xe = - (enthin) / lam + (q * R_heated * lh) / (R_flow * g * lam)
+                return xe                
+            elif geo == 'A':                
+                xe = -(enthin) / lam + (q * A_heated * lh) / (A_flow * g * lam)
+                return xe
+            else:
+                xe = -(enthin) / lam + (q * C_heated * lh) / (C_flow * g * lam)
+                return xe
     
-    def cal_xi(self, q, doi, dio, geo, hs, g, xe, lh, lam, ch = 1):
-        qq = q * (10 ** 3) # Lambda = kJ/kg
-        R_heated_1h = doi * lh
-        R_heated_2h = 2 * doi * lh
-        R_flow = doi * dio
-        A_heated_1h = (np.pi * dio) * lh
-        A_heated_2h = (np.pi * (dio + doi)) * lh
+    def cal_xi(self, q, q2, doi, dio, geo, hs, g, xe, lh, lam, ch = 1):
+        # calculate heated section parameter
+        if hs == 1:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * dio)
+            R_heated = doi
+            qsol = q * (10 ** 3) # Lambda = kJ/kg
+        elif hs == 2:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * doi)
+            R_heated = 2 * doi
+            qsol = (q + q2) * (10 ** 3)
+        else:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * (dio + doi))        
+            R_heated = 2 * doi
+            qsol = (q + q2) * (10 ** 3)
+        
+        # calculate flow area
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
-        C_heated = (np.pi) * doi * lh
+        R_flow = doi * dio
         C_flow = (np.pi / 4) * doi ** 2
+
+        # Set xe sign
+        
+        # calculate quality
         if ch == 0:
             if geo == 'R':
-                if hs == 1: # Lambda [=] kJ/kg
-                    xi = (qq * R_heated_1h) / (R_flow * g * lam) - xe
-                    return xi
-                else:
-                    xi = (qq * R_heated_2h) / (R_flow * g * lam) - xe
-                    return xi
-            elif geo == 'A':
-                if hs == 1:
-                    xi = (qq * A_heated_1h) / (A_flow * g * lam) - xe
-                    return xi
-                else:
-                    xi = (qq * A_heated_2h) / (A_flow * g * lam) - xe
-                    return xi
-            else:
-                xi =(qq * C_heated) / (C_flow * g * lam) - xe
+                xi = xe- (qsol * R_heated * lh) / (R_flow * g * lam) 
                 return xi
+            elif geo == 'A':
+                xi = xe- (qsol * A_heated * lh) / (A_flow * g * lam)
+                return xi
+            else:
+                xi = xe- (qsol * C_heated * lh) / (C_flow * g * lam)
+                return xi
+        elif ch == 1:
+            xi = xe- (qsol * C_heated * lh) / (C_flow * g * lam)
+            return xi
         else:
-            xi = (qq * C_heated) / (C_flow * g * lam) - xe
+            xi = xe- (q * C_heated * lh) / (C_flow * g * lam)
             return xi
 
     def cal_ent(self, q, doi, dio, geo, hs, g, enthin, lh, lam):
-        qq = q * (10 ** 3) # Lambda = kJ/kg
-        R_heated_1h = doi * lh
-        R_heated_2h = 2 * doi * lh
-        R_flow = doi * dio
-        A_heated_1h = (np.pi * dio) * lh
-        A_heated_2h = (np.pi * (dio + doi)) * lh
+        if hs == 1:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * dio)
+            R_heated = doi
+            qsol = q * (10 ** 3) # Lambda = kJ/kg
+        elif hs == 2:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * doi)
+            R_heated = 2 * doi
+            qsol = (q) * (10 ** 3)
+        else:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * (dio + doi))     
+            R_heated = 2 * doi
+            qsol = (q) * (10 ** 3)
+        
+        # calculate flow area
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
-        C_heated = (np.pi) * doi * lh
+        R_flow = doi * dio
         C_flow = (np.pi / 4) * doi ** 2
 
         if geo == 'R':
-            enth = enthin + (qq / R_flow) / (R_flow * g)
+            enth = enthin + (qsol / R_flow) / (R_flow * g)
             return enth
         elif geo == 'A':
-            enth = enthin + (qq / A_flow) / (A_flow * g)
+            enth = enthin + (qsol / A_flow) / (A_flow * g)
             return enth
         else:
-            enth = enthin + (qq / C_flow) / (C_flow * g)
+            enth = enthin + (qsol / C_flow) / (C_flow * g)
             return enth
 
 
@@ -266,31 +310,31 @@ class PhysicalProperty():
                 dTOSV_Cal = tsat - (ti + ((qq)*C_heated / (g*cpf*C_flow)))
                 return dTOSV_Cal
 
-    def cal_de(self, doi, dio, geo, hs, dh):
-        R_heated_1h = doi
-        R_heated_2h = 2 * doi
+    def cal_de(self, geo, hs, doi, dio, dh, lh):
+        if hs == 1:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * dio)
+            R_heated = doi
+        elif hs == 2:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * doi)
+            R_heated = 2 * doi
+        else:
+            C_heated = (np.pi) * doi
+            A_heated = (np.pi * (dio + doi))     
+            R_heated = 2 * doi
+        
+        # calculate flow area
+        A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
         R_flow = doi * dio
-        A_heated_1h = (np.pi * dio)
-        A_heated_2h = (np.pi * (dio + doi))
-        A_heated_3h = (np.pi * doi)
-        A_flow = ((np.pi) / 4) * (doi ** 2 - dio ** 2)
+        C_flow = (np.pi / 4) * doi ** 2
+
         if geo == 'R':
-            if hs == 1:
-                De = 4 * R_flow / R_heated_1h
-                return De
-            else:
-                De = 4 * R_flow / R_heated_2h
-                return De
+            De = 4 * R_flow / R_heated
+            return De
         elif geo == 'A':
-            if hs == 1:
-                De = 4 * A_flow / A_heated_1h
-                return De
-            elif hs == 2:
-                De = 4 * A_flow / A_heated_2h
-                return De
-            else:
-                De = 4 * A_flow / A_heated_3h
-                return De
+            De = 4 * A_flow / A_heated
+            return De
         else:
             De = dh
             return De

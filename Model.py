@@ -1037,11 +1037,13 @@ class Model(PhysicalProperty):
             #q_cal = 1
             return alpha, gamma, zxt, q_cal
 
-    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, alpha, gamma, lam, xt_cal=0.5):
+    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, alpha, gamma, lam, mass, tcrit, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
         if geo == "A":
+            rdmh = (doi**2-dio**2)/(2*np.log(doi/dio))
+            geop = (doi/dio)*(rdmh-dio**2)/(doi**2-rdmh)
             if hs == 1:
                 bta = rhov*q*(doi/dio)
             elif hs == 2:
@@ -1050,24 +1052,39 @@ class Model(PhysicalProperty):
                 bta = q*(dio/dh)
         else:
             bta = rhov*q*doi+math.sqrt(muf/muv)
+            rdmh = 1
+            geop = 1
         
         kpa = g*dh**(cpv/cpf)
         vf_alpha = 1/(1+bta*math.exp(-kpa*xosv))
         pcr = round(pcrit/(pcrit - p), 6)
         rdcp = p/pcrit
 
-        
+        y0 = 0.325
+        xc = 0.65
+        aa =  1e-4
+        wg = 1.1
+        wl = 0.2
+        mu = 1250
+        v = g/rhof
+        gcosr = 8.314*pcrit*v*mass/(tcrit)
+        j_beta = y0 + aa * ( mu * (2/3.141592) * (wl / (10*(rdcp-xc)**2 + wl**2)) + (1 - mu) * (np.sqrt(2*np.log(3)) / (np.sqrt(3.141592) * wg)) * np.exp(-(5/wg)*(rdcp-xc)**2) )
+
+
 
         # Calculate new CHF heat flux
         try:
-            zxt = (1 + xosv + vf_alpha + xt_cal**2)**3
-            q_cal = round((alpha/math.sqrt(doi)) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
-            
-
+            zxt = (1 + xt_cal**2)**3
+            q_cal =round((1/math.sqrt(dh**geop))* math.exp(-j_beta * np.sqrt(gcosr*xt_cal*zxt)),12)
+            alpha = q/q_cal
+            gamma = j_beta
             return alpha, gamma, zxt, q_cal
         except:
             print("this step occurs an error: q_cal back to set by 0.0001 and zxt = 1.0")
-            q_cal = round((alpha*lam/(1e3*math.sqrt(doi))) * math.exp(-gamma*(g*xt_cal*zxt)**0.5),12) # Deng
+            zxt = (1 + xt_cal**2)**3
+            q_cal = q
+            alpha = q/q_cal
+            gamma = j_beta
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):

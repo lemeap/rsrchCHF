@@ -171,7 +171,7 @@ class PhysicalProperty():
             C_heated = (np.pi) * doi
             A_heated = (np.pi * dio)
             R_heated = doi
-            qsol = q * (10 ** 3) # Lambda = kJ/kg
+            qsol = (q + q2) * (10 ** 3) # Lambda = kJ/kg
         elif hs == 2:
             C_heated = (np.pi) * doi
             A_heated = (np.pi * doi)
@@ -331,13 +331,13 @@ class PhysicalProperty():
 
         if geo == 'R':
             De = 4 * R_flow / R_heated
-            return De
+            return round(De, 6), round(R_heated, 6), round(R_flow, 6)
         elif geo == 'A':
             De = 4 * A_flow / A_heated
-            return De
+            return round(De, 6), round(A_heated, 6), round(A_flow, 6)
         else:
             De = dh
-            return De
+            return round(De, 6), round(C_heated, 6), round(C_flow, 6)
 
     def calQ(self, doi, dio, lh, g, geo, hs, dh, ho, hi, de):
         q_guess = g * (de / (4 * lh)) * (ho - hi) * 1e-6

@@ -1037,54 +1037,57 @@ class Model(PhysicalProperty):
             #q_cal = 1
             return alpha, gamma, zxt, q_cal
 
-    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, xosv, alpha, gamma, lam, mass, tcrit, xt_cal=0.5):
+    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, v, lam, mass, tcrit, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
         if geo == "A":
-            rdmh = (doi**2-dio**2)/(2*np.log(doi/dio))
+            rdmh = (doi**2-dio**2)/(2*math.log(doi/dio))
             geop = (doi/dio)*(rdmh-dio**2)/(doi**2-rdmh)
             if hs == 1:
-                bta = rhov*q*(doi/dio)
+                pass
+                #bta = rhov*q*(doi/dio)
             elif hs == 2:
-                bta = (rhov*q)*(doi/dio)
+                pass
+                #bta = (rhov*q)*(doi/dio)
             else:
-                bta = q*(dio/dh)
+                pass
+                #bta = q*(dio/dh)
         else:
-            bta = rhov*q*doi+math.sqrt(muf/muv)
+            #bta = rhov*q*doi+math.sqrt(muf/muv)
             rdmh = 1
             geop = 1
         
-        kpa = g*dh**(cpv/cpf)
-        vf_alpha = 1/(1+bta*math.exp(-kpa*xosv))
+        #kpa = g*dh**(cpv/cpf)
+        #vf_alpha = 1/(1+bta*math.exp(-kpa*xt_cal))
         pcr = round(pcrit/(pcrit - p), 6)
         rdcp = p/pcrit
 
-        y0 = 0.325
-        xc = 0.65
+        y0 = 0.375
+        xc = 0.795
         aa =  1e-4
-        wg = 1.1
-        wl = 0.2
-        mu = 1250
-        v = g/rhof
+        wg = 0.5
+        wl = 0.15
+        mu = 1000
+
         gcosr = 8.314*pcrit*v*mass/(tcrit)
-        j_beta = y0 + aa * ( mu * (2/3.141592) * (wl / (10*(rdcp-xc)**2 + wl**2)) + (1 - mu) * (np.sqrt(2*np.log(3)) / (np.sqrt(3.141592) * wg)) * np.exp(-(5/wg)*(rdcp-xc)**2) )
-
-
+        
+        j_alpha = 1.8 - 1.85*(np.abs(rdcp - 0.8)**2)
+        j_beta = y0 + aa * ( mu * (3/3.141592) *(wl / (25*(math.sqrt(rdcp)-xc)**2 + wl**2)) + (1 - mu) * (math.sqrt(2*math.log(2)) / (math.sqrt(3.141592) * wg)) * math.exp(-(5*math.log(2)/wg**2)*(math.sqrt(rdcp)-xc)**2) )
 
         # Calculate new CHF heat flux
         try:
             zxt = (1 + xt_cal**2)**3
-            q_cal =round((1/math.sqrt(dh**geop))* math.exp(-j_beta * np.sqrt(gcosr*xt_cal*zxt)),12)
-            alpha = q/q_cal
+            q_cal =round((j_alpha/math.sqrt(dh**geop))* math.exp(-j_beta * math.sqrt(gcosr*xt_cal*zxt)),12)
+            alpha = j_alpha
             gamma = j_beta
             return alpha, gamma, zxt, q_cal
         except:
-            print("this step occurs an error: q_cal back to set by 0.0001 and zxt = 1.0")
             zxt = (1 + xt_cal**2)**3
             q_cal = q
-            alpha = q/q_cal
+            alpha = 1
             gamma = j_beta
+            print("this step occurs an error: zxt: {:.4f}, gcosr: {:.4f}, j_beta: {:.4f}, and q_cal: {:.4f}".format(zxt, gcosr, j_beta, q_cal))
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):

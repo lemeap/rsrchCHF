@@ -111,7 +111,7 @@ class PhysicalProperty():
             Qratio = (qq * C_heated) / (C_flow * g * cpf * dtin)
             return Qratio
         
-    def cal_xe(self, q, q2, doi, dio, geo, hs, g, enthin, lh, lam, ch = 1):
+    def cal_xe(self, q, q2, doi, dio, geo, hs, g, xi, lh, lam, ch = 1):
         # calculate heated section parameter
         if hs == 1:
             C_heated = (np.pi) * doi
@@ -125,7 +125,7 @@ class PhysicalProperty():
             qsol = (q + q2) * (10 ** 3)
         else:
             C_heated = (np.pi) * doi
-            A_heated = (np.pi * (dio + doi))       
+            A_heated = (np.pi * (dio + doi))
             R_heated = 2 * doi
             qsol = (q + q2) * (10 ** 3)
         
@@ -135,35 +135,15 @@ class PhysicalProperty():
         C_flow = (np.pi / 4) * doi ** 2
 
         # calculate quality
-        # Set enthin sign
-        if enthin > 0:
-            xi  = - enthin / lam
-        else:
-            xi = enthin / lam
-
-        if ch == 0:
-            if geo == 'R':
-                xe = xi + (qsol * R_heated * lh) / (R_flow * g * lam)
-                return xe                
-            elif geo == 'A':                
-                xe = xi + (qsol * A_heated * lh) / (A_flow * g * lam)
-                return xe
-            else:
-                xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
-                return xe
-        elif ch == 1:
-            xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
+        if geo == 'R':
+            xe = xi + (qsol * R_heated * lh) / (R_flow * g * lam)
+            return xe                
+        elif geo == 'A':
+            xe = xi + (np.pi*(q2 * doi + q * dio) * lh) / (A_flow * g * lam)
             return xe
         else:
-            if geo == 'R':
-                xe = - (enthin) / lam + (q * R_heated * lh) / (R_flow * g * lam)
-                return xe                
-            elif geo == 'A':                
-                xe = -(enthin) / lam + (q * A_heated * lh) / (A_flow * g * lam)
-                return xe
-            else:
-                xe = -(enthin) / lam + (q * C_heated * lh) / (C_flow * g * lam)
-                return xe
+            xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
+            return xe
     
     def cal_xi(self, q, q2, doi, dio, geo, hs, g, xe, lh, lam, ch = 1):
         # calculate heated section parameter
@@ -187,8 +167,6 @@ class PhysicalProperty():
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
         R_flow = doi * dio
         C_flow = (np.pi / 4) * doi ** 2
-
-        # Set xe sign
         
         # calculate quality
         if ch == 0:
@@ -196,7 +174,7 @@ class PhysicalProperty():
                 xi = xe- (qsol * R_heated * lh) / (R_flow * g * lam) 
                 return xi
             elif geo == 'A':
-                xi = xe- (qsol * A_heated * lh) / (A_flow * g * lam)
+                xi = xe- (np.pi*(q2 * doi + q * dio) * lh) / (A_flow * g * lam)
                 return xi
             else:
                 xi = xe- (qsol * C_heated * lh) / (C_flow * g * lam)

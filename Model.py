@@ -1071,23 +1071,23 @@ class Model(PhysicalProperty):
         mu = 1000
 
         gcosr = 8.314*pcrit*v*mass/(tcrit)
-        
+
         j_alpha = 1.8 - 1.85*(np.abs(rdcp - 0.8)**2)
         j_beta = y0 + aa * ( mu * (3/3.141592) *(wl / (25*(math.sqrt(rdcp)-xc)**2 + wl**2)) + (1 - mu) * (math.sqrt(2*math.log(2)) / (math.sqrt(3.141592) * wg)) * math.exp(-(5*math.log(2)/wg**2)*(math.sqrt(rdcp)-xc)**2) )
 
         # Calculate new CHF heat flux
         try:
             zxt = (1 + xt_cal**2)**3
-            q_cal =round((j_alpha/math.sqrt(dh**geop))* math.exp(-j_beta * math.sqrt(gcosr*xt_cal*zxt)),12)
+            q_cal =round((1/math.sqrt(dh**geop))* math.exp(-j_beta * math.sqrt(gcosr*xt_cal*zxt)),12)
             alpha = j_alpha
             gamma = j_beta
             return alpha, gamma, zxt, q_cal
         except:
             zxt = (1 + xt_cal**2)**3
             q_cal = q
-            alpha = 1
+            alpha = 9999
             gamma = j_beta
-            print("this step occurs an error: zxt: {:.4f}, gcosr: {:.4f}, j_beta: {:.4f}, and q_cal: {:.4f}".format(zxt, gcosr, j_beta, q_cal))
+            #print("this step occurs an error: zxt: {:.4f}, gcosr: {:.4f}, j_beta: {:.4f}, and q_cal: {:.4f}".format(zxt, gcosr, j_beta, q_cal))
             return alpha, gamma, zxt, q_cal
 
     def sub_find_critical(self, dh, lh, g, q, lam, rdcp, Xi, Xe_ass, st_cal, modCHF, stepsize, tolerance):

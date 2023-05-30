@@ -1014,7 +1014,7 @@ class Model(PhysicalProperty):
         q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
-    def calCHFDeng(self, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.5):
+    def calCHFDeng(self, q, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.5):
         """
         Deng (1997) CHF correlation
         """
@@ -1029,12 +1029,11 @@ class Model(PhysicalProperty):
 
             # Calcuate qcal
             fzxt = round(math.exp(-gamma*(g*xt_cal*zxt)**0.5), 12) # f(Xt)
-            
             q_cal = round((alpha/math.sqrt(dh)) * fzxt ,12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
-            #zxt = 1
-            #q_cal = 1
+            zxt = 1
+            q_cal = q
             return alpha, gamma, zxt, q_cal
 
     def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, v, lam, mass, tcrit, xt_cal=0.5):

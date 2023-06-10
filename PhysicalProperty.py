@@ -139,7 +139,7 @@ class PhysicalProperty():
             xe = xi + (qsol * R_heated * lh) / (R_flow * g * lam)
             return xe                
         elif geo == 'A':
-            xe = xi + (np.pi*(q2 * doi + q * dio) * lh) / (A_flow * g * lam)
+            xe = xi + (np.pi * (q2 * (10 ** 3) * doi + q * (10 ** 3) * dio) * lh) / (A_flow * g * lam)
             return xe
         else:
             xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
@@ -171,19 +171,19 @@ class PhysicalProperty():
         # calculate quality
         if ch == 0:
             if geo == 'R':
-                xi = xe- (qsol * R_heated * lh) / (R_flow * g * lam) 
+                xi = xe - (qsol * R_heated * lh) / (R_flow * g * lam) 
                 return xi
             elif geo == 'A':
-                xi = xe- (np.pi*(q2 * doi + q * dio) * lh) / (A_flow * g * lam)
+                xi = xe - (np.pi*(q2 * (10 ** 3) * doi + q * (10 ** 3) * dio) * lh) / (A_flow * g * lam)
                 return xi
             else:
-                xi = xe- (qsol * C_heated * lh) / (C_flow * g * lam)
+                xi = xe - (qsol * C_heated * lh) / (C_flow * g * lam)
                 return xi
         elif ch == 1:
             xi = xe- (qsol * C_heated * lh) / (C_flow * g * lam)
             return xi
         else:
-            xi = xe- (q * C_heated * lh) / (C_flow * g * lam)
+            xi = xe- (q * (10 ** 3) * C_heated * lh) / (C_flow * g * lam)
             return xi
 
     def cal_ent(self, q, doi, dio, geo, hs, g, enthin, lh, lam):

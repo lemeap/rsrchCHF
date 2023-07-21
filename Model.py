@@ -1014,7 +1014,7 @@ class Model(PhysicalProperty):
         q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
-    def calCHFDeng(self, q, rdcp=0.1, dh=0.1, g=0.1, xt_cal=0.5):
+    def calCHFDeng(self, q, qo, qi, rdcp=0.1, dh=0.1, doi=0.1, dio=0.1, g=0.1, xt_cal=0.5):
         """
         Deng (1997) CHF correlation
         """
@@ -1026,9 +1026,10 @@ class Model(PhysicalProperty):
 
             # Replace NaN values with a default value (e.g., 1)
             #zxt = np.where(np.isnan(zxt), 1, zxt)
-
+            hpara = abs(qo*doi - qi*dio)/(q*(dio+doi))
+            gparam = (1 + dio**2/(doi**2+dio**2))**hpara
             # Calcuate qcal
-            fzxt = round(math.exp(-gamma*(g*xt_cal*zxt)**0.5), 12) # f(Xt)
+            fzxt = round(math.exp(-gamma*(g*gparam*xt_cal*zxt)**0.5), 12) # f(Xt)
             q_cal = round((alpha/math.sqrt(dh)) * fzxt ,12) # Deng
             return alpha, gamma, zxt, q_cal
         except:

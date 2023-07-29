@@ -1014,22 +1014,47 @@ class Model(PhysicalProperty):
         q_cal = round((alpha/(dh ** k1)) * np.exp(-gamma*((g**k2)*fxt)**k3),16) # Park
         return alpha, gamma, k1, k2, k3, fxt, q_cal
 
-    def calCHFDeng(self, q, qo, qi, rdcp=0.1, dh=0.1, doi=0.1, dio=0.1, g=0.1, xt_cal=0.5):
+    def cal_xt(self, xi, xosv, org_xe, xe):
+        # Set local thermodynamic equilibrium quality
+        xb = round(max(xi, xosv), 12)
+
+        # Define the rate equation
+        x, y = sp.symbols('x y')
+        eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
+        
+        if xb >= 0.0:
+            #print("Saturated flow boinling condition")
+            try:
+                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'), 12)
+            except:
+                sol = round(xe, 12)
+        else:
+            #print("Subcooled flow boiling condition")
+            try:
+                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'),12)
+            except:
+                sol = round(xe,12)
+                        
+        # Return value
+        return float(sol)
+
+    def calCHFDeng(self, q, qo, qi, rdcp, dh, doi, dio, g, xt_cal=0.5):
         """
         Deng (1997) CHF correlation
         """
-        try:
-            # CHF 계산 (Deng)
-            alpha = 1.669-6.544*(rdcp-0.448)**2
-            gamma = 0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2)))
-            zxt = round((1+xt_cal**2)**3,12)
+        # CHF 계산 (Deng)
+        alpha = 1.669-6.544*(rdcp-0.448)**2
+        gamma = 0.06523 + (0.1045/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.413*((math.log(rdcp)+0.4537)**2/(math.log(rdcp)**2)))
+        zxt = round((1+xt_cal**2)**3,12)
 
-            # Replace NaN values with a default value (e.g., 1)
-            #zxt = np.where(np.isnan(zxt), 1, zxt)
-            hpara = abs(qo*doi - qi*dio)/(q*(dio+doi))
-            gparam = (1 + dio**2/(doi**2+dio**2))**hpara
+        # Replace NaN values with a default value (e.g., 1)
+        zxt = np.where(np.isnan(zxt), 8, zxt)
+        hpara = abs(qo*doi - qi*dio)/(q*(dio+doi))
+        gparam = (1 + dio**2/(doi**2+dio**2))**hpara
+
+        try:
             # Calcuate qcal
-            fzxt = round(math.exp(-gamma*(g*gparam*xt_cal*zxt)**0.5), 12) # f(Xt)
+            fzxt = math.exp(float(-gamma*(g*xt_cal*zxt)**0.5)) # f(Xt)
             q_cal = round((alpha/math.sqrt(dh)) * fzxt ,12) # Deng
             return alpha, gamma, zxt, q_cal
         except:
@@ -1037,56 +1062,63 @@ class Model(PhysicalProperty):
             q_cal = q
             return alpha, gamma, zxt, q_cal
 
-    def calCHFJeong(self, geo, hs, doi, dio, dh, p, pcrit, g, q, muf, muv, rhof, rhov, cpf, cpv, v, lam, mass, tcrit, xt_cal=0.5):
+    def calCHFJeong(self, geo, hs, doi, dio, dh, rdcp, gre, qav, qo, qi, kf, cpf, xt_cal=0.5):
         """
         Jeong (2023) CHF correlation
         """
-        if geo == "A":
-            rdmh = (doi**2-dio**2)/(2*math.log(doi/dio))
-            geop = (doi/dio)*(rdmh-dio**2)/(doi**2-rdmh)
-            if hs == 1:
-                pass
-                #bta = rhov*q*(doi/dio)
-            elif hs == 2:
-                pass
-                #bta = (rhov*q)*(doi/dio)
-            else:
-                pass
-                #bta = q*(dio/dh)
-        else:
-            #bta = rhov*q*doi+math.sqrt(muf/muv)
-            rdmh = 1
-            geop = 1
+        hparam = abs(qo*doi - qi*dio)/(qav*(doi + dio))
+        gparam = (1 + dio**2 / (doi**2 + dio**2))**hparam
+        rdp = math.exp(-rdcp)
         
-        #kpa = g*dh**(cpv/cpf)
-        #vf_alpha = 1/(1+bta*math.exp(-kpa*xt_cal))
-        pcr = round(pcrit/(pcrit - p), 6)
-        rdcp = p/pcrit
+        # Calculation of alpha
+        if rdp < 0.512:
+            a1 = -10 
+            a2 = 350
+            k1 = 0.5
+            k2 = 0.4
+            h1 = 74
+            h2 = 12
+            ep = 0.51
+        else:
+            a1 = 11
+            a2 = 371330
+            k1 = 0.915
+            k2 = 0.4015
+            h1 = -8.1645
+            h2 = -30
+            ep = 3.6621e-4
+        
+        da = a2 - a1
+        col1 = da*ep/(1+10 ** ((k1-rdp)*h1))
+        col2 = da*(1-ep)/(1+10 ** ((k2-rdp)*h2))
+        alpha = a1+col1+col2
 
-        y0 = 0.375
-        xc = 0.795
-        aa =  1e-4
-        wg = 0.5
-        wl = 0.15
-        mu = 1000
+        # Calculation of gamma
+        y0 = 0.0695
+        xc = 0.6496
+        ga1 = 0.0141
+        w = 0.0605
+        ga3 = -0.6873
+        ga4 = 0.3953
+        col3 = (rdcp - xc) / w
 
-        gcosr = 8.314*pcrit*v*mass/(tcrit)
-
-        j_alpha = 1.8 - 1.85*(np.abs(rdcp - 0.8)**2)
-        j_beta = y0 + aa * ( mu * (3/3.141592) *(wl / (25*(math.sqrt(rdcp)-xc)**2 + wl**2)) + (1 - mu) * (math.sqrt(2*math.log(2)) / (math.sqrt(3.141592) * wg)) * math.exp(-(5*math.log(2)/wg**2)*(math.sqrt(rdcp)-xc)**2) )
+        gamma = y0 + (ga1 / (w * 2.5066)) * np.exp( -((rdcp-xc)/w) ** 2/2) * ( 1 + (ga3/6)*((col3)**3 - 3 * (col3)) + (ga4/24)*( (col3)**4 - 6 * (col3)**3 + 3 ) )
+        
+        
+        zxt = (1 + xt_cal**2)**3
+        fxt = ((gre * gparam * xt_cal * zxt) ** 0.5)
 
         # Calculate new CHF heat flux
         try:
-            zxt = (1 + xt_cal**2)**3
-            q_cal =round((1/math.sqrt(dh**geop))* math.exp(-j_beta * math.sqrt(gcosr*xt_cal*zxt)),12)
-            alpha = j_alpha
-            gamma = j_beta
+            q_cal =round(alpha * (kf/cpf/dh) ** 0.5 * math.exp(-gamma * fxt),12)
+            alpha = alpha
+            gamma = gamma
             return alpha, gamma, zxt, q_cal
         except:
-            zxt = (1 + xt_cal**2)**3
-            q_cal = q
-            alpha = 9999
-            gamma = j_beta
+            zxt = (1 + xt_cal ** 2)**3
+            q_cal = round(alpha * (kf/cpf/dh) ** 0.5 * math.exp(-gamma * fxt),12)
+            alpha = alpha
+            gamma = gamma
             #print("this step occurs an error: zxt: {:.4f}, gcosr: {:.4f}, j_beta: {:.4f}, and q_cal: {:.4f}".format(zxt, gcosr, j_beta, q_cal))
             return alpha, gamma, zxt, q_cal
 
@@ -1785,27 +1817,3 @@ class Model(PhysicalProperty):
                             #print(i, " + ", cnt_nan)
                             continue                     
                         """
-    
-    def cal_xt(self, xi, xosv, org_xe, xe):
-        # Set local thermodynamic equilibrium quality
-        xb = round(max(xi, xosv), 12)
-
-        # Define the rate equation
-        x, y = sp.symbols('x y')
-        eq = xosv* sp.log((xe-x)/xb) + sp.log((1-xe+xosv-xosv*x)/(1-xb+xosv))
-        
-        if xb >= 0.0:
-            #print("Saturated flow boinling condition")
-            try:
-                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'), 12)
-            except:
-                sol = round(xe, 12)
-        else:
-            #print("Subcooled flow boiling condition")
-            try:
-                sol = round(sp.nsolve(eq, (0, 1), solver='bisect'),12)
-            except:
-                sol = round(xe,12)
-                        
-        # Return value
-        return float(sol)

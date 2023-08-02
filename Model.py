@@ -1071,22 +1071,22 @@ class Model(PhysicalProperty):
         rdp = math.exp(-rdcp)
         
         # Calculation of alpha
-        if rdp < 0.512:
-            a1 = -10 
-            a2 = 350
-            k1 = 0.5
-            k2 = 0.4
-            h1 = 74
-            h2 = 12
-            ep = 0.51
+        if rdp < 0.5125:
+            a1 = 74.915
+            a2 = 257.82
+            k1 = 0.4935
+            k2 = 0.4239
+            h1 = 61.99
+            h2 = 63.395
+            ep = 0.7582
         else:
-            a1 = 11
-            a2 = 371330
-            k1 = 0.915
-            k2 = 0.4015
-            h1 = -8.1645
-            h2 = -30
-            ep = 3.6621e-4
+            a1 = 38.24
+            a2 = 298378.6
+            k1 = 0.9229
+            k2 = 0.4574
+            h1 = -17.682
+            h2 = -52.1889
+            ep = 3.6743e-4
         
         da = a2 - a1
         col1 = da*ep/(1+10 ** ((k1-rdp)*h1))
@@ -1102,7 +1102,8 @@ class Model(PhysicalProperty):
         ga4 = 0.3953
         col3 = (rdcp - xc) / w
 
-        gamma = y0 + (ga1 / (w * 2.5066)) * np.exp( -((rdcp-xc)/w) ** 2/2) * ( 1 + (ga3/6)*((col3)**3 - 3 * (col3)) + (ga4/24)*( (col3)**4 - 6 * (col3)**3 + 3 ) )
+        #gamma = y0 + (ga1 / (w * 2.5066)) * np.exp( -((rdcp-xc)/w) ** 2/2) * ( 1 + (ga3/6)*((col3)**3 - 3 * (col3)) + (ga4/24)*( (col3)**4 - 6 * (col3)**3 + 3 ) )
+        gamma = 0.07 + (0.0875/(math.sqrt((2*np.pi)*(math.log(rdcp))**2))) * math.exp(-5.5*((math.log(rdcp)+0.45)**2/(math.log(rdcp)**2)))
         
         
         zxt = (1 + xt_cal**2)**3
@@ -1115,7 +1116,6 @@ class Model(PhysicalProperty):
             gamma = gamma
             return alpha, gamma, zxt, q_cal
         except:
-            zxt = (1 + xt_cal ** 2)**3
             q_cal = round(alpha * (kf/cpf/dh) ** 0.5 * math.exp(-gamma * fxt),12)
             alpha = alpha
             gamma = gamma

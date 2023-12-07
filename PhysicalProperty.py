@@ -111,23 +111,23 @@ class PhysicalProperty():
             Qratio = (qq * C_heated) / (C_flow * g * cpf * dtin)
             return Qratio
         
-    def cal_xe(self, q, q2, doi, dio, geo, hs, g, xi, lh, lam, ch = 1):
+    def cal_xe(self, qav, q, q2, doi, dio, geo, hs, g, xi, lh, lam, ch = 1):
         # calculate heated section parameter
         if hs == 1:
             C_heated = (np.pi) * doi
             A_heated = (np.pi * dio)
             R_heated = doi
-            qsol = q * (10 ** 3) # Lambda = kJ/kg
+            qsol = qav * (10 ** 3) # Lambda = kJ/kg
         elif hs == 2:
             C_heated = (np.pi) * doi
             A_heated = (np.pi * doi)
             R_heated = 2 * doi
-            qsol = (q + q2) * (10 ** 3)
+            qsol = (qav) * (10 ** 3)
         else:
             C_heated = (np.pi) * doi
             A_heated = (np.pi * (dio + doi))
             R_heated = 2 * doi
-            qsol = (q + q2) * (10 ** 3)
+            qsol = qav * (10 ** 3)
         
         # calculate flow area
         A_flow = (np.pi / 4) * (doi ** 2 - dio ** 2)
@@ -139,8 +139,18 @@ class PhysicalProperty():
             xe = xi + (qsol * R_heated * lh) / (R_flow * g * lam)
             return xe                
         elif geo == 'A':
-            xe = xi + (np.pi * (q2 * (10 ** 3) * doi + q * (10 ** 3) * dio) * lh) / (A_flow * g * lam)
-            return xe
+            if hs == 1:
+                xe = xi + (np.pi * (q * 10 ** 3) * dio * lh) / (A_flow * g * lam)
+                return xe
+            elif hs == 2:
+                xe = xi + (np.pi * (q2 * 10 **3 *doi) * lh) / (A_flow * g * lam)
+                return xe
+            else:
+                if ch == 1:
+                    xe = xi + (np.pi * ((q * 10 ** 3 * dio)+ (q2 * 10 ** 3 *doi)) * lh) / (A_flow * g * lam)
+                else:
+                    xe = xi + (np.pi * ((qav * 10 ** 3 * (dio + doi)) * lh)) / (A_flow * g * lam)
+                return xe
         else:
             xe = xi + (qsol * C_heated * lh) / (C_flow * g * lam)
             return xe
